@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="PT Production">
+<title>Poster Tailor — Production</title>
+<link rel="manifest" href="manifest.json">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f5f0; min-height: 100vh; }
+
+  .topbar { background: #1a1a1a; color: white; padding: 14px 16px; display: flex; align-items: center; gap: 10px; position: sticky; top: 0; z-index: 10; }
+  .topbar-icon { width: 32px; height: 32px; background: #1D9E75; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+  .topbar h1 { font-size: 15px; font-weight: 600; }
+  .topbar p { font-size: 11px; color: #aaa; margin-top: 1px; }
+
+  .content { padding: 16px; max-width: 480px; margin: 0 auto; padding-bottom: 100px; }
+
+  .section-label { font-size: 11px; font-weight: 600; color: #888; text-transform: uppercase; letter-spacing: 0.06em; margin: 16px 0 8px; }
+
+  .order-card { background: white; border-radius: 14px; padding: 13px 14px; margin-bottom: 8px; display: flex; align-items: center; gap: 12px; border: 1.5px solid transparent; cursor: pointer; transition: all 0.15s; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+  .order-card.selected { border-color: #1D9E75; background: #f0faf6; }
+  .checkbox { width: 22px; height: 22px; border-radius: 50%; border: 2px solid #ddd; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.15s; }
+  .order-card.selected .checkbox { background: #1D9E75; border-color: #1D9E75; }
+  .checkmark { color: white; font-size: 13px; display: none; font-weight: 700; }
+  .order-card.selected .checkmark { display: block; }
+  .order-info { flex: 1; min-width: 0; }
+  .order-name { font-size: 15px; font-weight: 600; color: #1a1a1a; }
+  .order-meta { font-size: 12px; color: #888; margin-top: 2px; }
+  .order-card.selected .order-name { color: #085041; }
+  .badge { font-size: 11px; padding: 3px 9px; border-radius: 20px; background: #e6f7ef; color: #0F6E56; font-weight: 600; flex-shrink: 0; }
+
+  .photo-zone { background: white; border-radius: 14px; border: 1.5px dashed #ddd; padding: 18px; text-align: center; cursor: pointer; transition: background 0.15s; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+  .photo-zone:active { background: #f5f5f0; }
+  .photo-zone-icon { font-size: 32px; display: block; margin-bottom: 6px; }
+  .photo-zone p { font-size: 13px; color: #888; }
+  .photo-zone strong { font-size: 14px; color: #333; display: block; margin-bottom: 2px; }
+
+  .photo-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 10px; }
+  .photo-item { position: relative; aspect-ratio: 1; border-radius: 10px; overflow: hidden; }
+  .photo-item img { width: 100%; height: 100%; object-fit: cover; }
+  .photo-item .remove { position: absolute; top: 3px; right: 3px; background: rgba(0,0,0,0.65); color: white; border: none; border-radius: 50%; width: 20px; height: 20px; font-size: 11px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+
+  .preview-card { background: white; border-radius: 14px; padding: 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); display: none; }
+  .preview-card.visible { display: block; }
+  .preview-title { font-size: 12px; font-weight: 600; color: #888; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; }
+  .preview-msg { font-size: 13px; color: #333; white-space: pre-wrap; line-height: 1.6; background: #f5f5f0; padding: 10px 12px; border-radius: 10px; }
+
+  .bottom-bar { position: fixed; bottom: 0; left: 0; right: 0; background: white; border-top: 1px solid #eee; padding: 12px 16px 20px; max-width: 480px; margin: 0 auto; left: 50%; transform: translateX(-50%); width: 100%; }
+  .share-btn { width: 100%; padding: 15px; border-radius: 14px; border: none; background: #25D366; color: white; font-size: 16px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.15s; }
+  .share-btn:disabled { background: #ddd; color: #aaa; cursor: not-allowed; }
+  .share-btn:not(:disabled):active { transform: scale(0.97); }
+  .share-hint { font-size: 12px; color: #aaa; text-align: center; margin-top: 7px; }
+
+  .toast { position: fixed; top: 70px; left: 50%; transform: translateX(-50%); background: #1a1a1a; color: white; padding: 10px 20px; border-radius: 20px; font-size: 13px; opacity: 0; transition: opacity 0.25s; pointer-events: none; z-index: 100; white-space: nowrap; }
+  .toast.show { opacity: 1; }
+
+  #file-input { display: none; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-icon">🖼️</div>
+  <div>
+    <h1>Poster Tailor Production</h1>
+    <p>Select orders · Snap photo · Share</p>
+  </div>
+</div>
+
+<div class="content">
+  <div class="section-label">Ready orders — tap to select</div>
+  <div id="orders-list"></div>
+
+  <div class="section-label">Photo (optional)</div>
+  <div class="photo-zone" onclick="document.getElementById('file-input').click()">
+    <span class="photo-zone-icon">📷</span>
+    <strong>Tap to take / choose photo</strong>
+    <p>Camera or gallery — can select multiple</p>
+  </div>
+  <div class="photo-grid" id="photo-grid"></div>
+
+  <div class="section-label" id="preview-label" style="display:none;">Message preview</div>
+  <div class="preview-card" id="preview-card">
+    <div class="preview-msg" id="preview-msg"></div>
+  </div>
+</div>
+
+<div class="bottom-bar">
+  <button class="share-btn" id="share-btn" disabled onclick="doShare()">
+    <span style="font-size:20px;">💬</span>
+    Share to WhatsApp
+  </button>
+  <div class="share-hint" id="share-hint">Select at least 1 order above</div>
+</div>
+
+<div class="toast" id="toast"></div>
+<input type="file" id="file-input" accept="image/*" multiple>
+
+<script>
+const orders = [
+  { id:1, name:"Vincent", size:"90cm × 180cm", salesperson:"Collins" },
+  { id:2, name:"Ah Kow", size:"60cm × 120cm", salesperson:"Jacky" },
+  { id:3, name:"Lim Wei", size:"45cm × 90cm", salesperson:"Collins" },
+  { id:4, name:"Tan Mei", size:"80cm × 160cm", salesperson:"Jacky" },
+  { id:5, name:"David Chin", size:"70cm × 140cm", salesperson:"Collins" },
+];
+
+let selected = new Set();
+let photoFiles = [];
+
+function renderOrders() {
+  document.getElementById('orders-list').innerHTML = orders.map(o => `
+    <div class="order-card ${selected.has(o.id)?'selected':''}" onclick="toggle(${o.id})">
+      <div class="checkbox"><span class="checkmark">✓</span></div>
+      <div class="order-info">
+        <div class="order-name">${o.name}</div>
+        <div class="order-meta">${o.size} &nbsp;·&nbsp; ${o.salesperson}</div>
+      </div>
+      <span class="badge">Ready ✅</span>
+    </div>
+  `).join('');
+}
+
+function toggle(id) {
+  selected.has(id) ? selected.delete(id) : selected.add(id);
+  renderOrders();
+  updateUI();
+}
+
+function buildMsg() {
+  const list = orders.filter(o => selected.has(o.id));
+  let msg = `✅ *Order Ready for Collection*\n`;
+  msg += `━━━━━━━━━━━━━━\n`;
+  list.forEach((o,i) => {
+    msg += `\n${i+1}. *${o.name}*\n   📐 ${o.size}\n   👤 ${o.salesperson}\n`;
+  });
+  msg += `━━━━━━━━━━━━━━\n`;
+  msg += `📦 ${list.length} order${list.length>1?'s':''} ready\n`;
+  const now = new Date();
+  msg += `🕐 ${now.toLocaleDateString('en-MY',{day:'2-digit',month:'short'})} ${now.toLocaleTimeString('en-MY',{hour:'2-digit',minute:'2-digit'})}`;
+  return msg;
+}
+
+function updateUI() {
+  const n = selected.size;
+  const btn = document.getElementById('share-btn');
+  const hint = document.getElementById('share-hint');
+  const preview = document.getElementById('preview-card');
+  const previewLabel = document.getElementById('preview-label');
+
+  btn.disabled = n === 0;
+  if (n === 0) {
+    hint.textContent = 'Select at least 1 order above';
+    preview.classList.remove('visible');
+    previewLabel.style.display = 'none';
+  } else {
+    hint.textContent = `${n} order${n>1?'s':''} selected — ready to share`;
+    document.getElementById('preview-msg').textContent = buildMsg();
+    preview.classList.add('visible');
+    previewLabel.style.display = 'block';
+  }
+}
+
+async function doShare() {
+  const msg = buildMsg();
+  const canShareFiles = photoFiles.length > 0 && navigator.canShare && navigator.canShare({ files: photoFiles });
+  const shareData = canShareFiles ? { text: msg, files: photoFiles } : { text: msg };
+
+  if (navigator.share) {
+    try {
+      await navigator.share(shareData);
+      showToast('Shared! ✅');
+    } catch(e) {
+      if (e.name !== 'AbortError') openWhatsApp(msg);
+    }
+  } else {
+    openWhatsApp(msg);
+  }
+}
+
+function openWhatsApp(msg) {
+  window.open('https://api.whatsapp.com/send?text=' + encodeURIComponent(msg), '_blank');
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+document.getElementById('file-input').addEventListener('change', function(e) {
+  Array.from(e.target.files).forEach(file => {
+    photoFiles.push(file);
+    const reader = new FileReader();
+    reader.onload = ev => {
+      const idx = photoFiles.length - 1;
+      const div = document.createElement('div');
+      div.className = 'photo-item';
+      div.id = 'photo-' + idx;
+      div.innerHTML = `<img src="${ev.target.result}"><button class="remove" onclick="removePhoto(${idx})">✕</button>`;
+      document.getElementById('photo-grid').appendChild(div);
+    };
+    reader.readAsDataURL(file);
+  });
+  e.target.value = '';
+});
+
+function removePhoto(idx) {
+  photoFiles.splice(idx, 1);
+  const el = document.getElementById('photo-' + idx);
+  if (el) el.remove();
+}
+
+renderOrders();
+</script>
+</body>
+</html>
