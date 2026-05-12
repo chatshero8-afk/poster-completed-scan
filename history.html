@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PT Production — Order History</title>
+<style>
+  :root {
+    --green:#1D9E75;--green-bg:#e6f7ef;--green-dark:#085041;
+    --amber:#EF9F27;--amber-bg:#FAEEDA;--amber-dark:#854F0B;
+    --red:#E24B4A;--red-bg:#FCEBEB;
+    --bg:#f3f2ed;--card:#fff;--text:#1a1a1a;--text2:#777;--border:#e5e5e0;--radius:14px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+
+  .topbar{background:#1a1a1a;color:#fff;padding:14px 20px;display:flex;align-items:center;gap:10px}
+  .topbar-logo{width:34px;height:34px;background:var(--green);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px}
+  .topbar h1{font-size:16px;font-weight:600}
+  .topbar p{font-size:11px;color:#999;margin-top:1px}
+
+  .container{max-width:900px;margin:0 auto;padding:20px}
+
+  /* Filter */
+  .filter-bar{background:var(--card);border-radius:var(--radius);padding:14px 16px;margin-bottom:16px;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+  .filter-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .filter-row label{font-size:13px;font-weight:600;color:var(--text2)}
+  .filter-row input[type="date"]{padding:8px 10px;border:1.5px solid var(--border);border-radius:10px;font-size:13px;background:var(--bg)}
+  .filter-row span{font-size:13px;color:var(--text2)}
+  .filter-actions{display:flex;gap:6px;margin-left:auto}
+  .fbtn{padding:8px 14px;border-radius:10px;border:1.5px solid var(--border);background:var(--card);font-size:12px;font-weight:600;cursor:pointer}
+  .fbtn:hover{border-color:var(--green)}
+  .fbtn.primary{background:var(--green);color:white;border-color:var(--green)}
+  .quick-btns{display:flex;gap:6px;margin-top:10px}
+  .qbtn{padding:5px 12px;border-radius:20px;border:1px solid var(--border);background:var(--bg);font-size:11px;font-weight:600;color:var(--text2);cursor:pointer}
+  .qbtn:hover,.qbtn.active{background:var(--green-bg);border-color:var(--green);color:var(--green-dark)}
+
+  /* Stats */
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px}
+  .stat{background:var(--card);border-radius:var(--radius);padding:14px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+  .stat .num{font-size:24px;font-weight:700}
+  .stat .lbl{font-size:11px;color:var(--text2);margin-top:2px}
+  .s-green .num{color:var(--green-dark)}
+  .s-amber .num{color:var(--amber-dark)}
+  .s-blue .num{color:#185FA5}
+  .s-red .num{color:var(--red)}
+
+  /* Date group header */
+  .date-header{display:flex;align-items:center;gap:10px;padding:14px 0 8px;border-bottom:2px solid var(--green);margin-bottom:12px;margin-top:20px}
+  .date-header:first-of-type{margin-top:0}
+  .date-header .date-text{font-size:15px;font-weight:700;color:var(--text)}
+  .date-header .date-count{font-size:12px;font-weight:600;color:var(--green-dark);background:var(--green-bg);padding:3px 10px;border-radius:20px}
+
+  /* 2-column grid */
+  .card-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-bottom:16px}
+
+  /* Order card */
+  .o-card{background:var(--card);border-radius:var(--radius);padding:14px;box-shadow:0 1px 3px rgba(0,0,0,.05);display:flex;flex-direction:column;gap:8px;border-left:4px solid var(--border);transition:border-color .2s}
+  .o-card.notified{border-left-color:var(--green)}
+  .o-card.not-notified{border-left-color:var(--amber)}
+
+  .o-card .o-top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+  .o-card .o-name{font-size:15px;font-weight:700;color:var(--text)}
+  .o-card .o-time{font-size:11px;color:var(--text2);font-weight:600;white-space:nowrap}
+  .o-card .o-id{font-size:11px;color:var(--text2)}
+
+  .o-card .o-details{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--text2);line-height:1.5}
+
+  .o-card .o-phone{display:flex;align-items:center;gap:6px}
+  .o-card .o-phone a{color:var(--green-dark);font-weight:600;text-decoration:none;font-size:13px}
+  .o-card .o-phone a:hover{text-decoration:underline}
+
+  .o-card .o-bottom{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:4px;padding-top:8px;border-top:1px solid var(--border)}
+
+  .pay-badge{font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;white-space:nowrap}
+  .pay-badge.paid{background:var(--green-bg);color:var(--green-dark)}
+  .pay-badge.balance{background:var(--amber-bg);color:var(--amber-dark)}
+
+  /* Notify button */
+  .notify-btn{padding:6px 12px;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;border:1.5px solid;transition:all .2s;white-space:nowrap}
+  .notify-btn.not-yet{background:var(--red-bg);border-color:var(--red);color:#791F1F}
+  .notify-btn.not-yet:hover{background:#f7c1c1}
+  .notify-btn.done{background:var(--green-bg);border-color:var(--green);color:var(--green-dark);cursor:default}
+  .notify-btn:disabled{opacity:.6;cursor:wait}
+
+  .empty{text-align:center;padding:50px 20px;color:var(--text2)}
+  .empty-icon{font-size:48px;display:block;margin-bottom:12px;opacity:.5}
+  .spinner{display:inline-block;width:18px;height:18px;border:2px solid #ccc;border-top-color:var(--green);border-radius:50%;animation:spin .6s linear infinite;vertical-align:middle}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .status-msg{text-align:center;padding:16px;font-size:13px;color:var(--text2)}
+
+  .toast{position:fixed;top:70px;left:50%;transform:translateX(-50%);background:var(--green-dark);color:white;padding:10px 20px;border-radius:20px;font-size:13px;font-weight:600;opacity:0;transition:opacity .3s;pointer-events:none;z-index:99;white-space:nowrap;box-shadow:0 4px 12px rgba(0,0,0,.2)}
+  .toast.show{opacity:1}
+
+  @media(max-width:600px){
+    .card-grid{grid-template-columns:1fr}
+    .stats{grid-template-columns:repeat(2,1fr)}
+    .filter-actions{margin-left:0;margin-top:8px;width:100%}
+    .filter-actions .fbtn{flex:1;text-align:center}
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-logo">📋</div>
+  <div><h1>Order Ready History</h1><p>Poster Tailor Production</p></div>
+</div>
+
+<div class="container">
+  <div class="filter-bar">
+    <div class="filter-row">
+      <label>From</label><input type="date" id="h-from">
+      <span>→</span>
+      <label>To</label><input type="date" id="h-to">
+      <div class="filter-actions"><button class="fbtn primary" onclick="loadData()">Load</button></div>
+    </div>
+    <div class="quick-btns">
+      <button class="qbtn active" onclick="setRange(14,this)">Last 14 days</button>
+      <button class="qbtn" onclick="setRange(7,this)">7 days</button>
+      <button class="qbtn" onclick="setRange(30,this)">30 days</button>
+      <button class="qbtn" onclick="setToday(this)">Today</button>
+    </div>
+  </div>
+
+  <div class="stats" id="stats" style="display:none">
+    <div class="stat s-green"><div class="num" id="s-total">0</div><div class="lbl">Total orders</div></div>
+    <div class="stat s-green"><div class="num" id="s-paid">0</div><div class="lbl">Fully paid</div></div>
+    <div class="stat s-amber"><div class="num" id="s-bal">0</div><div class="lbl">Has balance</div></div>
+    <div class="stat s-red"><div class="num" id="s-pending">0</div><div class="lbl">Not notified</div></div>
+  </div>
+
+  <div id="content"></div>
+  <div id="empty" class="empty"><span class="empty-icon">📋</span><p>Select a date range above to load order history</p></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API = 'https://script.google.com/macros/s/AKfycbySP59ABZWwxVAxjJND5bxM8YtDzd8bacds1vD4wsu6uAHplkq4c4Q4ePKz0FQAiPP5pQ/exec';
+
+document.addEventListener('DOMContentLoaded',()=>{setRange(14);loadData();});
+
+function fmt(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+function setRange(days,btn){
+  const to=new Date(),fr=new Date();fr.setDate(fr.getDate()-(days-1));
+  document.getElementById('h-from').value=fmt(fr);document.getElementById('h-to').value=fmt(to);
+  document.querySelectorAll('.qbtn').forEach(b=>b.classList.remove('active'));
+  if(btn)btn.classList.add('active');else document.querySelector('.qbtn').classList.add('active');
+}
+function setToday(btn){const t=fmt(new Date());document.getElementById('h-from').value=t;document.getElementById('h-to').value=t;document.querySelectorAll('.qbtn').forEach(b=>b.classList.remove('active'));if(btn)btn.classList.add('active');}
+
+async function loadData(){
+  const from=document.getElementById('h-from').value,to=document.getElementById('h-to').value;
+  if(!from||!to)return;
+  const area=document.getElementById('content'),emp=document.getElementById('empty'),stats=document.getElementById('stats');
+  area.innerHTML='<div class="status-msg"><span class="spinner"></span> Loading orders...</div>';emp.style.display='none';
+
+  const sd=new Date(from),ed=new Date(to),dates=[];
+  for(let d=new Date(ed);d>=sd;d.setDate(d.getDate()-1))dates.push(fmt(d));
+
+  try{
+    const results=await Promise.all(dates.map(dt=>
+      fetch(API+'?action=history&date='+dt).then(r=>r.json()).then(d=>({date:dt,orders:d.orders||[]})).catch(()=>({date:dt,orders:[]}))
+    ));
+    const all=[],grouped={};
+    results.forEach(r=>{if(r.orders.length){grouped[r.date]=r.orders;r.orders.forEach(o=>all.push({...o,date:r.date}));}});
+
+    if(!all.length){area.innerHTML='';emp.style.display='';emp.querySelector('p').innerHTML='No orders found for this period';stats.style.display='none';return;}
+
+    const paid=all.filter(o=>o.paymentStatus==='Paid').length;
+    const pending=all.filter(o=>!o.notifyStatus).length;
+    stats.style.display='';
+    document.getElementById('s-total').textContent=all.length;
+    document.getElementById('s-paid').textContent=paid;
+    document.getElementById('s-bal').textContent=all.length-paid;
+    document.getElementById('s-pending').textContent=pending;
+
+    const sortedDates=Object.keys(grouped).sort((a,b)=>b.localeCompare(a));
+    let html='';
+
+    sortedDates.forEach(dt=>{
+      const dd=new Date(dt+'T00:00:00');
+      const dlabel=dd.toLocaleDateString('en-MY',{weekday:'short',day:'2-digit',month:'short',year:'numeric'});
+      const count=grouped[dt].length;
+
+      html+=`<div class="date-header">
+        <div class="date-text">📅 ${dlabel}</div>
+        <div class="date-count">${count} order${count>1?'s':''}</div>
+      </div>`;
+      html+='<div class="card-grid">';
+
+      grouped[dt].forEach(o=>{
+        const isPaid=o.paymentStatus==='Paid';
+        const isNotified=!!o.notifyStatus;
+        const payHtml=isPaid
+          ?'<span class="pay-badge paid">✅ Paid</span>'
+          :'<span class="pay-badge balance">Balance RM'+parseFloat(o.balance||0).toFixed(0)+'</span>';
+        const notifyHtml=isNotified
+          ?`<span class="notify-btn done">✅ Notified${o.notifyTime?' '+o.notifyTime:''}</span>`
+          :`<button class="notify-btn not-yet" id="notify-${o.rowIndex}" onclick="markNotified(${o.rowIndex})">⚠️ Not yet</button>`;
+        const phoneHtml=o.phone
+          ?`<div class="o-phone">📞 <a href="tel:${o.phone}">${o.phone}</a></div>`
+          :'<div class="o-phone" style="color:#ccc">📞 No phone</div>';
+
+        html+=`<div class="o-card ${isNotified?'notified':'not-notified'}">
+          <div class="o-top">
+            <div><div class="o-name">${o.clientName}</div><div class="o-id">#${o.orderId} · ${o.scanTime}</div></div>
+          </div>
+          <div class="o-details">
+            <div>📐 ${o.size}</div>
+            <div>👤 ${o.salesperson||'-'}</div>
+            ${phoneHtml}
+          </div>
+          <div class="o-bottom">
+            ${payHtml}
+            ${notifyHtml}
+          </div>
+        </div>`;
+      });
+
+      html+='</div>';
+    });
+
+    area.innerHTML=html;
+  }catch(e){
+    area.innerHTML='<div class="status-msg" style="color:#E24B4A">⚠️ Failed to load data</div>';
+  }
+}
+
+async function markNotified(rowIndex){
+  const btn=document.getElementById('notify-'+rowIndex);
+  if(!btn)return;
+  btn.disabled=true;
+  btn.textContent='Updating...';
+
+  try{
+    await fetch(API,{
+      method:'POST',
+      mode:'no-cors',
+      headers:{'Content-Type':'text/plain'},
+      body:JSON.stringify({action:'updateNotify',rowIndex:rowIndex,status:'Notified'})
+    });
+
+    // Update UI
+    btn.className='notify-btn done';
+    btn.textContent='✅ Notified just now';
+    btn.disabled=false;
+    btn.onclick=null;
+    btn.style.cursor='default';
+
+    // Update card border
+    const card=btn.closest('.o-card');
+    if(card){card.classList.remove('not-notified');card.classList.add('notified');}
+
+    // Update stats
+    const pending=document.getElementById('s-pending');
+    if(pending)pending.textContent=Math.max(0,parseInt(pending.textContent)-1);
+
+    showToast('✅ Marked as notified');
+  }catch(e){
+    btn.disabled=false;
+    btn.textContent='⚠️ Not yet';
+    showToast('⚠️ Failed to update');
+  }
+}
+
+function showToast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500);}
+</script>
+</body>
+</html>
