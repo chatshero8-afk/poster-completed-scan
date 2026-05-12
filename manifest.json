@@ -1,0 +1,12 @@
+{
+  "name": "Poster Tailor Production",
+  "short_name": "PT Production",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f5f5f0",
+  "theme_color": "#1a1a1a",
+  "icons": [
+    { "src": "https://via.placeholder.com/192x192/1D9E75/ffffff?text=PT", "sizes": "192x192", "type": "image/png" },
+    { "src": "https://via.placeholder.com/512x512/1D9E75/ffffff?text=PT", "sizes": "512x512", "type": "image/png" }
+  ]
+}
