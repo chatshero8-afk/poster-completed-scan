@@ -2,222 +2,519 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="PT Production">
-<title>Poster Tailor — Production</title>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="PT Scanner">
+<title>Poster Tailor — Production Scanner</title>
 <link rel="manifest" href="manifest.json">
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 <style>
+  :root {
+    --green: #1D9E75;
+    --green-bg: #e6f7ef;
+    --green-dark: #085041;
+    --red: #E24B4A;
+    --red-bg: #FCEBEB;
+    --amber: #EF9F27;
+    --amber-bg: #FAEEDA;
+    --bg: #f3f2ed;
+    --card: #ffffff;
+    --text: #1a1a1a;
+    --text2: #777;
+    --border: #e5e5e0;
+    --radius: 14px;
+    --wa-green: #25D366;
+  }
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f5f0; min-height: 100vh; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; }
 
-  .topbar { background: #1a1a1a; color: white; padding: 14px 16px; display: flex; align-items: center; gap: 10px; position: sticky; top: 0; z-index: 10; }
-  .topbar-icon { width: 32px; height: 32px; background: #1D9E75; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+  .topbar { background: #1a1a1a; color: #fff; padding: 12px 16px; display: flex; align-items: center; gap: 10px; position: sticky; top: 0; z-index: 20; }
+  .topbar-logo { width: 34px; height: 34px; background: var(--green); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
   .topbar h1 { font-size: 15px; font-weight: 600; }
-  .topbar p { font-size: 11px; color: #aaa; margin-top: 1px; }
+  .topbar p { font-size: 11px; color: #999; margin-top: 1px; }
 
-  .content { padding: 16px; max-width: 480px; margin: 0 auto; padding-bottom: 100px; }
+  .tabs { display: flex; background: var(--card); border-bottom: 1px solid var(--border); position: sticky; top: 58px; z-index: 19; }
+  .tab { flex: 1; text-align: center; padding: 11px 0; font-size: 13px; font-weight: 600; color: var(--text2); cursor: pointer; border-bottom: 2.5px solid transparent; transition: all 0.2s; }
+  .tab.active { color: var(--green); border-color: var(--green); }
 
-  .section-label { font-size: 11px; font-weight: 600; color: #888; text-transform: uppercase; letter-spacing: 0.06em; margin: 16px 0 8px; }
+  .page { display: none; padding: 16px; padding-bottom: 100px; max-width: 500px; margin: 0 auto; }
+  .page.active { display: block; }
 
-  .order-card { background: white; border-radius: 14px; padding: 13px 14px; margin-bottom: 8px; display: flex; align-items: center; gap: 12px; border: 1.5px solid transparent; cursor: pointer; transition: all 0.15s; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
-  .order-card.selected { border-color: #1D9E75; background: #f0faf6; }
-  .checkbox { width: 22px; height: 22px; border-radius: 50%; border: 2px solid #ddd; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.15s; }
-  .order-card.selected .checkbox { background: #1D9E75; border-color: #1D9E75; }
-  .checkmark { color: white; font-size: 13px; display: none; font-weight: 700; }
-  .order-card.selected .checkmark { display: block; }
-  .order-info { flex: 1; min-width: 0; }
-  .order-name { font-size: 15px; font-weight: 600; color: #1a1a1a; }
-  .order-meta { font-size: 12px; color: #888; margin-top: 2px; }
-  .order-card.selected .order-name { color: #085041; }
-  .badge { font-size: 11px; padding: 3px 9px; border-radius: 20px; background: #e6f7ef; color: #0F6E56; font-weight: 600; flex-shrink: 0; }
+  #scanner-box { width: 100%; border-radius: var(--radius); overflow: hidden; background: #000; margin-bottom: 12px; }
+  #scanner-box video { width: 100% !important; border-radius: var(--radius); }
 
-  .photo-zone { background: white; border-radius: 14px; border: 1.5px dashed #ddd; padding: 18px; text-align: center; cursor: pointer; transition: background 0.15s; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
-  .photo-zone:active { background: #f5f5f0; }
-  .photo-zone-icon { font-size: 32px; display: block; margin-bottom: 6px; }
-  .photo-zone p { font-size: 13px; color: #888; }
-  .photo-zone strong { font-size: 14px; color: #333; display: block; margin-bottom: 2px; }
+  .scanner-toggle { display: flex; gap: 8px; margin-bottom: 12px; }
+  .scanner-toggle button { flex: 1; padding: 10px; border-radius: var(--radius); border: 1.5px solid var(--border); background: var(--card); font-size: 13px; font-weight: 600; cursor: pointer; }
+  .scanner-toggle button.active { border-color: var(--green); background: var(--green-bg); color: var(--green-dark); }
 
-  .photo-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 10px; }
-  .photo-item { position: relative; aspect-ratio: 1; border-radius: 10px; overflow: hidden; }
-  .photo-item img { width: 100%; height: 100%; object-fit: cover; }
-  .photo-item .remove { position: absolute; top: 3px; right: 3px; background: rgba(0,0,0,0.65); color: white; border: none; border-radius: 50%; width: 20px; height: 20px; font-size: 11px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+  .manual-input { display: flex; gap: 8px; margin-bottom: 14px; }
+  .manual-input input { flex: 1; padding: 12px 14px; border: 1.5px solid var(--border); border-radius: var(--radius); font-size: 15px; background: var(--card); outline: none; }
+  .manual-input input:focus { border-color: var(--green); }
+  .manual-input button { padding: 12px 18px; border-radius: var(--radius); border: none; background: var(--green); color: white; font-size: 14px; font-weight: 700; cursor: pointer; white-space: nowrap; }
 
-  .preview-card { background: white; border-radius: 14px; padding: 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); display: none; }
-  .preview-card.visible { display: block; }
-  .preview-title { font-size: 12px; font-weight: 600; color: #888; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; }
-  .preview-msg { font-size: 13px; color: #333; white-space: pre-wrap; line-height: 1.6; background: #f5f5f0; padding: 10px 12px; border-radius: 10px; }
+  .label { font-size: 11px; font-weight: 700; color: var(--text2); text-transform: uppercase; letter-spacing: 0.06em; margin: 16px 0 8px; }
 
-  .bottom-bar { position: fixed; bottom: 0; left: 0; right: 0; background: white; border-top: 1px solid #eee; padding: 12px 16px 20px; max-width: 480px; margin: 0 auto; left: 50%; transform: translateX(-50%); width: 100%; }
-  .share-btn { width: 100%; padding: 15px; border-radius: 14px; border: none; background: #25D366; color: white; font-size: 16px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.15s; }
+  .order-card { background: var(--card); border-radius: var(--radius); padding: 14px; margin-bottom: 8px; display: flex; align-items: flex-start; gap: 12px; border: 1.5px solid transparent; cursor: pointer; transition: all 0.15s; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+  .order-card.selected { border-color: var(--green); background: #f0faf6; }
+  .order-card .check { width: 22px; height: 22px; border-radius: 50%; border: 2px solid #ddd; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px; }
+  .order-card.selected .check { background: var(--green); border-color: var(--green); color: white; font-size: 13px; font-weight: 700; }
+  .order-card .info { flex: 1; min-width: 0; }
+  .order-card .name { font-size: 15px; font-weight: 700; }
+  .order-card.selected .name { color: var(--green-dark); }
+  .order-card .meta { font-size: 12px; color: var(--text2); margin-top: 3px; line-height: 1.5; }
+  .order-card .right-col { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+  .order-card .payment { font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 20px; white-space: nowrap; }
+  .payment.paid { background: var(--green-bg); color: var(--green-dark); }
+  .payment.balance { background: var(--amber-bg); color: #854F0B; }
+  .order-card .remove { background: none; border: none; color: #ccc; font-size: 16px; cursor: pointer; padding: 2px 4px; line-height: 1; }
+  .order-card .remove:hover { color: var(--red); }
+
+  .empty { text-align: center; padding: 40px 20px; color: var(--text2); }
+  .empty-icon { font-size: 48px; display: block; margin-bottom: 12px; opacity: 0.5; }
+  .empty p { font-size: 13px; line-height: 1.6; }
+
+  .bottom-bar { position: fixed; bottom: 0; left: 0; right: 0; background: var(--card); border-top: 1px solid var(--border); padding: 12px 16px 22px; z-index: 20; }
+  .bottom-inner { max-width: 500px; margin: 0 auto; }
+  .share-btn { width: 100%; padding: 15px; border-radius: var(--radius); border: none; background: var(--wa-green); color: white; font-size: 16px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.15s; }
   .share-btn:disabled { background: #ddd; color: #aaa; cursor: not-allowed; }
   .share-btn:not(:disabled):active { transform: scale(0.97); }
-  .share-hint { font-size: 12px; color: #aaa; text-align: center; margin-top: 7px; }
+  .share-hint { font-size: 11px; color: var(--text2); text-align: center; margin-top: 6px; }
 
-  .toast { position: fixed; top: 70px; left: 50%; transform: translateX(-50%); background: #1a1a1a; color: white; padding: 10px 20px; border-radius: 20px; font-size: 13px; opacity: 0; transition: opacity 0.25s; pointer-events: none; z-index: 100; white-space: nowrap; }
+  .msg-preview { background: var(--bg); border-radius: 10px; padding: 12px; margin-top: 12px; font-size: 12px; color: var(--text); white-space: pre-wrap; line-height: 1.6; font-family: monospace; display: none; }
+  .msg-preview.visible { display: block; }
+
+  .history-card { background: var(--card); border-radius: var(--radius); padding: 12px 14px; margin-bottom: 6px; display: flex; align-items: center; gap: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+  .history-card .time { font-size: 11px; color: var(--text2); font-weight: 600; min-width: 65px; flex-shrink: 0; }
+  .history-card .info { flex: 1; min-width: 0; }
+  .history-card .name { font-size: 14px; font-weight: 600; }
+  .history-card .detail { font-size: 12px; color: var(--text2); margin-top: 2px; }
+
+  .date-row { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
+  .date-row input { flex: 1; padding: 10px 12px; border: 1.5px solid var(--border); border-radius: var(--radius); font-size: 14px; background: var(--card); }
+  .date-row button { padding: 10px 14px; border-radius: var(--radius); border: 1.5px solid var(--border); background: var(--card); font-size: 13px; font-weight: 600; cursor: pointer; }
+  .date-row button:hover { border-color: var(--green); }
+
+  .toast { position: fixed; top: 70px; left: 50%; transform: translateX(-50%); background: #1a1a1a; color: white; padding: 10px 20px; border-radius: 20px; font-size: 13px; font-weight: 600; opacity: 0; transition: opacity 0.25s; pointer-events: none; z-index: 99; white-space: nowrap; }
   .toast.show { opacity: 1; }
 
-  #file-input { display: none; }
+  .loading { display: inline-block; width: 16px; height: 16px; border: 2px solid #ccc; border-top-color: var(--green); border-radius: 50%; animation: spin 0.6s linear infinite; vertical-align: middle; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .stats { display: flex; gap: 8px; margin-bottom: 14px; }
+  .stat-card { flex: 1; background: var(--card); border-radius: var(--radius); padding: 12px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+  .stat-card .num { font-size: 22px; font-weight: 700; color: var(--green-dark); }
+  .stat-card .lbl { font-size: 11px; color: var(--text2); margin-top: 2px; }
+
+  .config-banner { background: var(--amber-bg); border: 1.5px solid var(--amber); border-radius: var(--radius); padding: 12px 14px; margin-bottom: 14px; font-size: 13px; color: #633806; line-height: 1.5; }
+  .config-banner code { background: rgba(0,0,0,0.08); padding: 2px 6px; border-radius: 4px; font-size: 11px; }
 </style>
 </head>
 <body>
 
 <div class="topbar">
-  <div class="topbar-icon">🖼️</div>
+  <div class="topbar-logo">🖼️</div>
   <div>
-    <h1>Poster Tailor Production</h1>
-    <p>Select orders · Snap photo · Share</p>
+    <h1>PT Production Scanner</h1>
+    <p>Scan · Lookup · Share</p>
   </div>
 </div>
 
-<div class="content">
-  <div class="section-label">Ready orders — tap to select</div>
-  <div id="orders-list"></div>
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('scanner')">📷 Scanner</div>
+  <div class="tab" onclick="switchTab('history')">📋 History</div>
+</div>
 
-  <div class="section-label">Photo (optional)</div>
-  <div class="photo-zone" onclick="document.getElementById('file-input').click()">
-    <span class="photo-zone-icon">📷</span>
-    <strong>Tap to take / choose photo</strong>
-    <p>Camera or gallery — can select multiple</p>
+<!-- SCANNER PAGE -->
+<div class="page active" id="page-scanner">
+
+  <div id="config-banner" class="config-banner" style="display:none;">
+    ⚠️ Set your Apps Script URL first.<br>
+    Open <code>index.html</code> → find <code>APPS_SCRIPT_URL</code> → paste your deployed URL.
   </div>
-  <div class="photo-grid" id="photo-grid"></div>
 
-  <div class="section-label" id="preview-label" style="display:none;">Message preview</div>
-  <div class="preview-card" id="preview-card">
-    <div class="preview-msg" id="preview-msg"></div>
+  <div class="scanner-toggle">
+    <button class="active" id="btn-camera" onclick="toggleMode('camera')">📷 Scan Barcode</button>
+    <button id="btn-manual" onclick="toggleMode('manual')">⌨️ Enter ID</button>
+  </div>
+
+  <div id="camera-section">
+    <div id="scanner-box"></div>
+  </div>
+
+  <div id="manual-section" style="display:none;">
+    <div class="manual-input">
+      <input type="number" id="order-id-input" placeholder="Enter Order ID (e.g. 96561)" inputmode="numeric">
+      <button onclick="manualLookup()">Search</button>
+    </div>
+  </div>
+
+  <div id="lookup-status" style="font-size:13px; color:var(--text2); text-align:center; margin:8px 0;"></div>
+
+  <div class="label" id="scanned-label" style="display:none;">Scanned orders — tap to select</div>
+  <div id="scanned-list"></div>
+
+  <div id="empty-state" class="empty">
+    <span class="empty-icon">📦</span>
+    <p>Scan a barcode or enter Order ID<br>to look up completed orders</p>
+  </div>
+
+  <div class="label" id="preview-label" style="display:none;">Message preview</div>
+  <div class="msg-preview" id="msg-preview"></div>
+</div>
+
+<!-- HISTORY PAGE -->
+<div class="page" id="page-history">
+  <div class="date-row">
+    <input type="date" id="history-date">
+    <button onclick="loadHistory()">Load</button>
+    <button onclick="setToday(); loadHistory();">Today</button>
+  </div>
+
+  <div class="stats" id="history-stats" style="display:none;">
+    <div class="stat-card"><div class="num" id="stat-total">0</div><div class="lbl">Orders</div></div>
+    <div class="stat-card"><div class="num" id="stat-paid">0</div><div class="lbl">Paid</div></div>
+    <div class="stat-card"><div class="num" id="stat-balance">0</div><div class="lbl">Balance</div></div>
+  </div>
+
+  <div id="history-list"></div>
+  <div id="history-empty" class="empty">
+    <span class="empty-icon">📋</span>
+    <p>Select a date and tap Load<br>to see scanned orders</p>
   </div>
 </div>
 
-<div class="bottom-bar">
-  <button class="share-btn" id="share-btn" disabled onclick="doShare()">
-    <span style="font-size:20px;">💬</span>
-    Share to WhatsApp
-  </button>
-  <div class="share-hint" id="share-hint">Select at least 1 order above</div>
+<!-- BOTTOM BAR -->
+<div class="bottom-bar" id="bottom-bar">
+  <div class="bottom-inner">
+    <button class="share-btn" id="share-btn" disabled onclick="doShare()">
+      💬 Share to WhatsApp
+    </button>
+    <div class="share-hint" id="share-hint">Scan an order to start</div>
+  </div>
 </div>
 
 <div class="toast" id="toast"></div>
-<input type="file" id="file-input" accept="image/*" multiple>
 
 <script>
-const orders = [
-  { id:1, name:"Vincent", size:"90cm × 180cm", salesperson:"Collins" },
-  { id:2, name:"Ah Kow", size:"60cm × 120cm", salesperson:"Jacky" },
-  { id:3, name:"Lim Wei", size:"45cm × 90cm", salesperson:"Collins" },
-  { id:4, name:"Tan Mei", size:"80cm × 160cm", salesperson:"Jacky" },
-  { id:5, name:"David Chin", size:"70cm × 140cm", salesperson:"Collins" },
-];
+// =============================================
+// ⚡ PASTE YOUR APPS SCRIPT WEB APP URL HERE
+// =============================================
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbySP59ABZWwxVAxjJND5bxM8YtDzd8bacds1vD4wsu6uAHplkq4c4Q4ePKz0FQAiPP5pQ/exec';
+// Example: https://script.google.com/macros/s/AKfycb.../exec
+// =============================================
 
-let selected = new Set();
-let photoFiles = [];
+let scannedOrders = [];
+let selectedIds = new Set();
+let html5QrCode = null;
+let isScanning = false;
 
-function renderOrders() {
-  document.getElementById('orders-list').innerHTML = orders.map(o => `
-    <div class="order-card ${selected.has(o.id)?'selected':''}" onclick="toggle(${o.id})">
-      <div class="checkbox"><span class="checkmark">✓</span></div>
-      <div class="order-info">
-        <div class="order-name">${o.name}</div>
-        <div class="order-meta">${o.size} &nbsp;·&nbsp; ${o.salesperson}</div>
-      </div>
-      <span class="badge">Ready ✅</span>
-    </div>
-  `).join('');
-}
+document.addEventListener('DOMContentLoaded', () => {
+  if (APPS_SCRIPT_URL === 'YOUR_APPS_SCRIPT_URL_HERE') {
+    document.getElementById('config-banner').style.display = 'block';
+  }
+  setToday();
+  initScanner();
+});
 
-function toggle(id) {
-  selected.has(id) ? selected.delete(id) : selected.add(id);
-  renderOrders();
-  updateUI();
-}
-
-function buildMsg() {
-  const list = orders.filter(o => selected.has(o.id));
-  let msg = `✅ *Order Ready for Collection*\n`;
-  msg += `━━━━━━━━━━━━━━\n`;
-  list.forEach((o,i) => {
-    msg += `\n${i+1}. *${o.name}*\n   📐 ${o.size}\n   👤 ${o.salesperson}\n`;
+// ── Tab switching ──
+function switchTab(tab) {
+  document.querySelectorAll('.tab').forEach((t, i) => {
+    t.classList.toggle('active', (tab === 'scanner' && i === 0) || (tab === 'history' && i === 1));
   });
-  msg += `━━━━━━━━━━━━━━\n`;
-  msg += `📦 ${list.length} order${list.length>1?'s':''} ready\n`;
-  const now = new Date();
-  msg += `🕐 ${now.toLocaleDateString('en-MY',{day:'2-digit',month:'short'})} ${now.toLocaleTimeString('en-MY',{hour:'2-digit',minute:'2-digit'})}`;
-  return msg;
+  document.getElementById('page-scanner').classList.toggle('active', tab === 'scanner');
+  document.getElementById('page-history').classList.toggle('active', tab === 'history');
+  document.getElementById('bottom-bar').style.display = tab === 'scanner' ? '' : 'none';
+  if (tab === 'history') loadHistory();
 }
 
-function updateUI() {
-  const n = selected.size;
+// ── Camera / Manual toggle ──
+function toggleMode(mode) {
+  document.getElementById('btn-camera').classList.toggle('active', mode === 'camera');
+  document.getElementById('btn-manual').classList.toggle('active', mode === 'manual');
+  document.getElementById('camera-section').style.display = mode === 'camera' ? '' : 'none';
+  document.getElementById('manual-section').style.display = mode === 'manual' ? '' : 'none';
+  if (mode === 'camera') startScanner(); else stopScanner();
+}
+
+// ── Barcode Scanner ──
+function initScanner() {
+  html5QrCode = new Html5Qrcode('scanner-box');
+  startScanner();
+}
+
+function startScanner() {
+  if (isScanning || !html5QrCode) return;
+  isScanning = true;
+  html5QrCode.start(
+    { facingMode: 'environment' },
+    { fps: 10, qrbox: (w, h) => ({ width: Math.floor(w * 0.8), height: Math.floor(h * 0.4) }), aspectRatio: 1.5 },
+    onScanSuccess,
+    () => {}
+  ).catch(err => {
+    console.warn('Camera error:', err);
+    isScanning = false;
+    toggleMode('manual');
+    showToast('Camera not available — use manual input');
+  });
+}
+
+function stopScanner() {
+  if (!isScanning || !html5QrCode) return;
+  html5QrCode.stop().then(() => { isScanning = false; }).catch(() => { isScanning = false; });
+}
+
+let lastScan = '';
+let lastScanTime = 0;
+function onScanSuccess(text) {
+  const id = text.trim();
+  const now = Date.now();
+  // Debounce same code within 3s
+  if (id === lastScan && now - lastScanTime < 3000) return;
+  lastScan = id; lastScanTime = now;
+
+  if (scannedOrders.find(o => o.orderId === id)) {
+    showToast('Order #' + id + ' already scanned');
+    return;
+  }
+  lookupOrder(id);
+}
+
+// ── Manual lookup ──
+function manualLookup() {
+  const input = document.getElementById('order-id-input');
+  const id = input.value.trim();
+  if (!id) return;
+  if (scannedOrders.find(o => o.orderId === id)) { showToast('Already added'); return; }
+  lookupOrder(id);
+  input.value = '';
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && document.getElementById('manual-section').style.display !== 'none') manualLookup();
+});
+
+// ── API Lookup ──
+async function lookupOrder(orderId) {
+  const status = document.getElementById('lookup-status');
+  status.innerHTML = '<span class="loading"></span> Looking up #' + orderId + '...';
+
+  try {
+    const resp = await fetch(APPS_SCRIPT_URL + '?action=lookup&orderId=' + encodeURIComponent(orderId));
+    const data = await resp.json();
+
+    if (data.found) {
+      let sizeDisplay = data.size || '';
+      if (!sizeDisplay && data.filename) {
+        const m = data.filename.match(/(\d+)\s*[x×]\s*(\d+)\s*(cm)?/i);
+        if (m) sizeDisplay = m[1] + 'cm × ' + m[2] + 'cm';
+        else sizeDisplay = data.filename;
+      }
+
+      const order = {
+        orderId: data.orderId,
+        clientName: data.clientName,
+        clientContact: data.clientContact,
+        size: sizeDisplay,
+        servedBy: data.servedBy,
+        source: data.source,
+        batch: data.batch,
+        isPaid: data.isPaid,
+        balance: data.balance,
+        total: data.total,
+        deposit: data.deposit,
+        frame: data.frame,
+        filename: data.filename
+      };
+      scannedOrders.push(order);
+      selectedIds.add(order.orderId);
+      renderScannedList();
+      status.textContent = '✅ Found: ' + data.clientName;
+      showToast('✅ ' + data.clientName);
+    } else {
+      status.textContent = '❌ Order #' + orderId + ' not found';
+      showToast('Not found');
+    }
+    setTimeout(() => { status.textContent = ''; }, 3000);
+  } catch (err) {
+    status.textContent = '⚠️ Connection error';
+    console.error(err);
+  }
+}
+
+// ── Render scanned list ──
+function renderScannedList() {
+  const list = document.getElementById('scanned-list');
+  const empty = document.getElementById('empty-state');
+  const label = document.getElementById('scanned-label');
+
+  if (scannedOrders.length === 0) {
+    list.innerHTML = '';
+    empty.style.display = '';
+    label.style.display = 'none';
+    updateShareBtn();
+    return;
+  }
+  empty.style.display = 'none';
+  label.style.display = '';
+
+  list.innerHTML = scannedOrders.map(o => {
+    const sel = selectedIds.has(o.orderId);
+    const payClass = o.isPaid ? 'paid' : 'balance';
+    const payText = o.isPaid ? '✅ Paid' : 'RM' + o.balance.toFixed(0);
+    return `
+      <div class="order-card ${sel ? 'selected' : ''}" onclick="toggleSelect('${o.orderId}')">
+        <div class="check">${sel ? '✓' : ''}</div>
+        <div class="info">
+          <div class="name">${o.clientName}</div>
+          <div class="meta">
+            📐 ${o.size}<br>
+            👤 ${o.servedBy} · #${o.orderId} · ${o.batch}
+          </div>
+        </div>
+        <div class="right-col">
+          <span class="payment ${payClass}">${payText}</span>
+          <button class="remove" onclick="event.stopPropagation(); removeOrder('${o.orderId}')" title="Remove">✕</button>
+        </div>
+      </div>`;
+  }).join('');
+  updateShareBtn();
+}
+
+function toggleSelect(id) {
+  selectedIds.has(id) ? selectedIds.delete(id) : selectedIds.add(id);
+  renderScannedList();
+}
+
+function removeOrder(id) {
+  scannedOrders = scannedOrders.filter(o => o.orderId !== id);
+  selectedIds.delete(id);
+  renderScannedList();
+}
+
+// ── Build WhatsApp message ──
+function buildMessage() {
+  const orders = scannedOrders.filter(o => selectedIds.has(o.orderId));
+  if (!orders.length) return '';
+
+  let lines = ['✅ *Order Ready*', '━━━━━━━━━━━━━━'];
+  orders.forEach((o, i) => {
+    const pay = o.isPaid ? '💰 *Paid*' : '💰 *Balance RM' + o.balance.toFixed(2) + '*';
+    if (orders.length > 1) lines.push('');
+    lines.push((orders.length > 1 ? (i+1) + '. ' : '') + '*' + o.clientName + '* — ' + o.size);
+    lines.push('   👤 ' + o.servedBy);
+    lines.push('   ' + pay);
+  });
+
+  lines.push('━━━━━━━━━━━━━━');
+  const now = new Date();
+  lines.push('🕐 ' + now.toLocaleDateString('en-MY', {day:'2-digit',month:'short'}) + ' ' + now.toLocaleTimeString('en-MY', {hour:'2-digit',minute:'2-digit',hour12:true}));
+  return lines.join('\n');
+}
+
+function updateShareBtn() {
+  const n = selectedIds.size;
   const btn = document.getElementById('share-btn');
   const hint = document.getElementById('share-hint');
-  const preview = document.getElementById('preview-card');
+  const preview = document.getElementById('msg-preview');
   const previewLabel = document.getElementById('preview-label');
 
   btn.disabled = n === 0;
   if (n === 0) {
-    hint.textContent = 'Select at least 1 order above';
+    hint.textContent = scannedOrders.length ? 'Select at least 1 order' : 'Scan an order to start';
     preview.classList.remove('visible');
     previewLabel.style.display = 'none';
   } else {
-    hint.textContent = `${n} order${n>1?'s':''} selected — ready to share`;
-    document.getElementById('preview-msg').textContent = buildMsg();
+    hint.textContent = n + ' order' + (n > 1 ? 's' : '') + ' ready to share';
+    preview.textContent = buildMessage();
     preview.classList.add('visible');
-    previewLabel.style.display = 'block';
+    previewLabel.style.display = '';
   }
 }
 
+// ── Share ──
 async function doShare() {
-  const msg = buildMsg();
-  const canShareFiles = photoFiles.length > 0 && navigator.canShare && navigator.canShare({ files: photoFiles });
-  const shareData = canShareFiles ? { text: msg, files: photoFiles } : { text: msg };
+  const msg = buildMessage();
+  if (!msg) return;
+  logToSheet();
 
   if (navigator.share) {
-    try {
-      await navigator.share(shareData);
-      showToast('Shared! ✅');
-    } catch(e) {
-      if (e.name !== 'AbortError') openWhatsApp(msg);
+    try { await navigator.share({ text: msg }); showToast('Shared! ✅'); return; }
+    catch (e) { if (e.name === 'AbortError') return; }
+  }
+  window.open('https://api.whatsapp.com/send?text=' + encodeURIComponent(msg), '_blank');
+  showToast('Opening WhatsApp...');
+}
+
+// ── Log to sheet ──
+async function logToSheet() {
+  if (APPS_SCRIPT_URL === 'YOUR_APPS_SCRIPT_URL_HERE') return;
+  const orders = scannedOrders.filter(o => selectedIds.has(o.orderId));
+  try {
+    await fetch(APPS_SCRIPT_URL, {
+      method: 'POST', mode: 'no-cors',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({ action: 'logScan', orders: orders.map(o => ({
+        orderId: o.orderId, clientName: o.clientName, size: o.size,
+        isPaid: o.isPaid, balance: o.balance
+      }))})
+    });
+  } catch (e) { console.warn('Log failed:', e); }
+}
+
+// ── History ──
+function setToday() {
+  const d = new Date();
+  document.getElementById('history-date').value = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+
+async function loadHistory() {
+  const dateVal = document.getElementById('history-date').value;
+  if (!dateVal) return;
+  const list = document.getElementById('history-list');
+  const empty = document.getElementById('history-empty');
+  const stats = document.getElementById('history-stats');
+
+  list.innerHTML = '<div style="text-align:center;padding:20px"><span class="loading"></span> Loading...</div>';
+  empty.style.display = 'none';
+
+  try {
+    const resp = await fetch(APPS_SCRIPT_URL + '?action=history&date=' + dateVal);
+    const data = await resp.json();
+    if (data.orders && data.orders.length) {
+      stats.style.display = '';
+      document.getElementById('stat-total').textContent = data.orders.length;
+      document.getElementById('stat-paid').textContent = data.orders.filter(o => o.paymentStatus.includes('Paid')).length;
+      document.getElementById('stat-balance').textContent = data.orders.filter(o => o.paymentStatus.includes('Balance')).length;
+
+      list.innerHTML = data.orders.map(o => `
+        <div class="history-card">
+          <div class="time">${o.scanTime}</div>
+          <div class="info">
+            <div class="name">${o.clientName}</div>
+            <div class="detail">#${o.orderId} · ${o.size}</div>
+          </div>
+          <span class="payment ${o.paymentStatus.includes('Paid') ? 'paid' : 'balance'}">${o.paymentStatus}</span>
+        </div>`).join('');
+    } else {
+      list.innerHTML = '';
+      empty.style.display = '';
+      stats.style.display = 'none';
+      empty.querySelector('p').innerHTML = 'No orders scanned on<br>' + dateVal;
     }
-  } else {
-    openWhatsApp(msg);
+  } catch (err) {
+    list.innerHTML = '<div style="text-align:center;padding:20px;color:#E24B4A">⚠️ Failed to load</div>';
   }
 }
 
-function openWhatsApp(msg) {
-  window.open('https://api.whatsapp.com/send?text=' + encodeURIComponent(msg), '_blank');
-}
-
+// ── Toast ──
 function showToast(msg) {
   const t = document.getElementById('toast');
   t.textContent = msg;
   t.classList.add('show');
   setTimeout(() => t.classList.remove('show'), 2500);
 }
-
-document.getElementById('file-input').addEventListener('change', function(e) {
-  Array.from(e.target.files).forEach(file => {
-    photoFiles.push(file);
-    const reader = new FileReader();
-    reader.onload = ev => {
-      const idx = photoFiles.length - 1;
-      const div = document.createElement('div');
-      div.className = 'photo-item';
-      div.id = 'photo-' + idx;
-      div.innerHTML = `<img src="${ev.target.result}"><button class="remove" onclick="removePhoto(${idx})">✕</button>`;
-      document.getElementById('photo-grid').appendChild(div);
-    };
-    reader.readAsDataURL(file);
-  });
-  e.target.value = '';
-});
-
-function removePhoto(idx) {
-  photoFiles.splice(idx, 1);
-  const el = document.getElementById('photo-' + idx);
-  if (el) el.remove();
-}
-
-renderOrders();
 </script>
 </body>
 </html>
