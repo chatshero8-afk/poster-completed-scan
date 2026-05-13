@@ -8,113 +8,67 @@
   :root{--green:#1D9E75;--green-bg:#e6f7ef;--green-dark:#085041;--amber:#EF9F27;--amber-bg:#FAEEDA;--amber-dark:#854F0B;--red:#E24B4A;--red-bg:#FCEBEB;--bg:#f3f2ed;--card:#fff;--text:#1a1a1a;--text2:#888;--border:#e5e5e0;--radius:12px}
   *{box-sizing:border-box;margin:0;padding:0}
   body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
-
   .topbar{background:#1a1a1a;color:#fff;padding:12px 20px;display:flex;align-items:center;gap:10px}
-  .topbar h1{font-size:15px;font-weight:600}
-  .topbar p{font-size:11px;color:#999;margin-top:1px}
+  .topbar h1{font-size:15px;font-weight:600}.topbar p{font-size:11px;color:#999;margin-top:1px}
   .tlogo{width:30px;height:30px;background:var(--green);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:16px}
-
   .toolbar{background:var(--card);padding:12px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;flex-wrap:wrap;position:sticky;top:0;z-index:10}
   .toolbar label{font-size:12px;font-weight:600;color:var(--text2)}
   .toolbar input[type="date"]{padding:6px 8px;border:1.5px solid var(--border);border-radius:8px;font-size:12px;background:var(--bg)}
   .toolbar span{font-size:12px;color:var(--text2)}
   .tbtn{padding:6px 12px;border-radius:8px;border:1.5px solid var(--border);background:var(--card);font-size:11px;font-weight:600;cursor:pointer}
-  .tbtn:hover{border-color:var(--green)}
-  .tbtn.primary{background:var(--green);color:white;border-color:var(--green)}
+  .tbtn:hover{border-color:var(--green)}.tbtn.primary{background:var(--green);color:white;border-color:var(--green)}
   .qbtns{display:flex;gap:4px;margin-left:8px}
   .qb{padding:4px 10px;border-radius:16px;border:1px solid var(--border);background:var(--bg);font-size:10px;font-weight:600;color:var(--text2);cursor:pointer}
   .qb:hover,.qb.active{background:var(--green-bg);border-color:var(--green);color:var(--green-dark)}
-
-  /* Stats bar */
   .stats-bar{display:flex;gap:12px;padding:12px 20px;background:var(--card);border-bottom:1px solid var(--border)}
-  .sb-item{font-size:12px;font-weight:600;color:var(--text2)}
-  .sb-item b{font-size:14px;margin-right:3px}
-  .sb-item.green b{color:var(--green-dark)}
-  .sb-item.amber b{color:var(--amber-dark)}
-  .sb-item.red b{color:var(--red)}
-
-  /* Kanban container */
+  .sb-item{font-size:12px;font-weight:600;color:var(--text2)}.sb-item b{font-size:14px;margin-right:3px}
+  .sb-item.green b{color:var(--green-dark)}.sb-item.amber b{color:var(--amber-dark)}.sb-item.red b{color:var(--red)}
   .kanban{display:flex;gap:12px;padding:16px 20px;overflow-x:auto;align-items:flex-start;min-height:calc(100vh - 140px)}
-  .kanban::-webkit-scrollbar{height:6px}
-  .kanban::-webkit-scrollbar-thumb{background:#ccc;border-radius:3px}
-
-  /* Date column */
+  .kanban::-webkit-scrollbar{height:6px}.kanban::-webkit-scrollbar-thumb{background:#ccc;border-radius:3px}
   .date-col{min-width:300px;max-width:340px;flex-shrink:0;background:var(--card);border-radius:var(--radius);border:1px solid var(--border);overflow:hidden}
   .date-col .col-header{background:#1a1a1a;color:white;padding:10px 14px;font-size:13px;font-weight:700;display:flex;justify-content:space-between;align-items:center}
   .date-col .col-header .count{background:rgba(255,255,255,.15);padding:2px 8px;border-radius:10px;font-size:11px}
   .col-body{padding:6px;max-height:calc(100vh - 220px);overflow-y:auto}
-  .col-body::-webkit-scrollbar{width:4px}
-  .col-body::-webkit-scrollbar-thumb{background:#ddd;border-radius:2px}
-
-  /* Order row */
+  .col-body::-webkit-scrollbar{width:4px}.col-body::-webkit-scrollbar-thumb{background:#ddd;border-radius:2px}
   .o-row{background:var(--bg);border-radius:8px;padding:8px 10px;margin-bottom:4px;font-size:12px;position:relative;border-left:3px solid var(--border);transition:all .15s}
-  .o-row.notified{border-left-color:var(--green);background:#f7fcf9}
-  .o-row.not-notified{border-left-color:var(--amber)}
+  .o-row.notified{border-left-color:var(--green);background:#f7fcf9}.o-row.not-notified{border-left-color:var(--amber)}
   .o-row .r-top{display:flex;justify-content:space-between;align-items:center;gap:4px}
   .o-row .r-name{font-weight:700;font-size:13px;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .o-row .r-time{font-size:10px;color:var(--text2);white-space:nowrap}
   .o-row .r-meta{color:var(--text2);font-size:11px;margin-top:3px;line-height:1.4}
   .o-row .r-meta a{color:var(--green-dark);font-weight:600;text-decoration:none}
   .o-row .r-bot{display:flex;align-items:center;justify-content:space-between;margin-top:5px;gap:4px}
-
   .badge{font-size:10px;font-weight:700;padding:2px 8px;border-radius:12px;white-space:nowrap}
-  .badge.paid{background:var(--green-bg);color:var(--green-dark)}
-  .badge.bal{background:var(--amber-bg);color:var(--amber-dark)}
-
+  .badge.paid{background:var(--green-bg);color:var(--green-dark)}.badge.bal{background:var(--amber-bg);color:var(--amber-dark)}
   .n-btn{padding:3px 8px;border-radius:12px;font-size:10px;font-weight:700;cursor:pointer;border:1px solid;white-space:nowrap}
-  .n-btn.ny{background:var(--amber-bg);border-color:var(--amber);color:var(--amber-dark)}
-  .n-btn.done{background:var(--green-bg);border-color:var(--green);color:var(--green-dark)}
-
-  .del-btn{background:none;border:none;color:#ccc;font-size:14px;cursor:pointer;padding:0 2px;line-height:1}
-  .del-btn:hover{color:var(--red)}
-
-  .empty-col{text-align:center;padding:20px 10px;color:var(--text2);font-size:12px}
-
-  /* Loading & empty */
+  .n-btn.ny{background:var(--amber-bg);border-color:var(--amber);color:var(--amber-dark)}.n-btn.done{background:var(--green-bg);border-color:var(--green);color:var(--green-dark)}
+  .del-btn{background:none;border:none;color:#ccc;font-size:14px;cursor:pointer;padding:0 2px}.del-btn:hover{color:var(--red)}
+  .src-tag{font-size:9px;font-weight:700;padding:2px 6px;border-radius:8px;background:#E8E4F0;color:#5B4A8A;white-space:nowrap}
   .center-msg{text-align:center;padding:60px 20px;color:var(--text2);font-size:13px}
   .spinner{display:inline-block;width:16px;height:16px;border:2px solid #ddd;border-top-color:var(--green);border-radius:50%;animation:spin .5s linear infinite;vertical-align:middle}
   @keyframes spin{to{transform:rotate(360deg)}}
-
-  .toast{position:fixed;top:60px;left:50%;transform:translateX(-50%);background:var(--green-dark);color:white;padding:8px 20px;border-radius:20px;font-size:12px;font-weight:600;opacity:0;transition:opacity .3s;pointer-events:none;z-index:99;white-space:nowrap}
-  .toast.show{opacity:1}
+  .toast{position:fixed;top:60px;left:50%;transform:translateX(-50%);background:var(--green-dark);color:white;padding:8px 20px;border-radius:20px;font-size:12px;font-weight:600;opacity:0;transition:opacity .3s;pointer-events:none;z-index:99;white-space:nowrap}.toast.show{opacity:1}
 </style>
 </head>
 <body>
-
-<div class="topbar">
-  <div class="tlogo">📋</div>
-  <div><h1>Order Ready History</h1><p>Poster Tailor Production</p></div>
-</div>
-
+<div class="topbar"><div class="tlogo">📋</div><div><h1>Order Ready History</h1><p>Poster Tailor Production</p></div></div>
 <div class="toolbar">
-  <label>From</label><input type="date" id="h-from">
-  <span>→</span><label>To</label><input type="date" id="h-to">
+  <label>From</label><input type="date" id="h-from"><span>→</span><label>To</label><input type="date" id="h-to">
   <button class="tbtn primary" onclick="loadData()">Load</button>
-  <div class="qbtns">
-    <button class="qb active" onclick="setRange(14,this)">14d</button>
-    <button class="qb" onclick="setRange(7,this)">7d</button>
-    <button class="qb" onclick="setRange(30,this)">30d</button>
-    <button class="qb" onclick="setToday(this)">Today</button>
-  </div>
+  <div class="qbtns"><button class="qb active" onclick="setRange(14,this)">14d</button><button class="qb" onclick="setRange(7,this)">7d</button><button class="qb" onclick="setRange(30,this)">30d</button><button class="qb" onclick="setToday(this)">Today</button></div>
 </div>
-
 <div class="stats-bar" id="stats-bar" style="display:none">
   <div class="sb-item green"><b id="s-total">0</b> total</div>
   <div class="sb-item green"><b id="s-paid">0</b> paid</div>
   <div class="sb-item amber"><b id="s-bal">0</b> balance</div>
   <div class="sb-item red"><b id="s-pend">0</b> not notified</div>
 </div>
-
-<div class="kanban" id="kanban">
-  <div class="center-msg" id="empty-msg">Select a date range and tap <b>Load</b></div>
-</div>
-
+<div class="kanban" id="kanban"><div class="center-msg">Select a date range and tap <b>Load</b></div></div>
 <div class="toast" id="toast"></div>
 
 <script>
 const API='https://script.google.com/macros/s/AKfycbySP59ABZWwxVAxjJND5bxM8YtDzd8bacds1vD4wsu6uAHplkq4c4Q4ePKz0FQAiPP5pQ/exec';
 let allData={};
-
 document.addEventListener('DOMContentLoaded',()=>{setRange(14);loadData();});
 
 function fmt(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
@@ -122,33 +76,21 @@ function setRange(n,btn){const t=new Date(),f=new Date();f.setDate(f.getDate()-(
 function setToday(btn){const t=fmt(new Date());document.getElementById('h-from').value=t;document.getElementById('h-to').value=t;document.querySelectorAll('.qb').forEach(b=>b.classList.remove('active'));if(btn)btn.classList.add('active');}
 
 async function loadData(){
-  const from=document.getElementById('h-from').value,to=document.getElementById('h-to').value;
-  if(!from||!to)return;
+  const from=document.getElementById('h-from').value,to=document.getElementById('h-to').value;if(!from||!to)return;
   const kb=document.getElementById('kanban'),sb=document.getElementById('stats-bar');
   kb.innerHTML='<div class="center-msg"><span class="spinner"></span> Loading...</div>';sb.style.display='none';
-
   const sd=new Date(from),ed=new Date(to),dates=[];
   for(let d=new Date(ed);d>=sd;d.setDate(d.getDate()-1))dates.push(fmt(d));
-
   try{
-    const results=await Promise.all(dates.map(dt=>
-      fetch(API+'?action=history&date='+dt).then(r=>r.json()).then(d=>({date:dt,orders:d.orders||[]})).catch(()=>({date:dt,orders:[]}))
-    ));
-
-    allData={};
-    const all=[];
+    const results=await Promise.all(dates.map(dt=>fetch(API+'?action=history&date='+dt).then(r=>r.json()).then(d=>({date:dt,orders:d.orders||[]})).catch(()=>({date:dt,orders:[]}))));
+    allData={};const all=[];
     results.forEach(r=>{if(r.orders.length){allData[r.date]=r.orders;r.orders.forEach(o=>all.push(o));}});
-
-    if(!all.length){kb.innerHTML='<div class="center-msg">No orders found for this period</div>';return;}
-
+    if(!all.length){kb.innerHTML='<div class="center-msg">No orders found</div>';return;}
     const paid=all.filter(o=>o.paymentStatus==='Paid').length;
     const pend=all.filter(o=>!o.notifyStatus).length;
     sb.style.display='';
-    document.getElementById('s-total').textContent=all.length;
-    document.getElementById('s-paid').textContent=paid;
-    document.getElementById('s-bal').textContent=all.length-paid;
-    document.getElementById('s-pend').textContent=pend;
-
+    document.getElementById('s-total').textContent=all.length;document.getElementById('s-paid').textContent=paid;
+    document.getElementById('s-bal').textContent=all.length-paid;document.getElementById('s-pend').textContent=pend;
     renderKanban();
   }catch(e){kb.innerHTML='<div class="center-msg" style="color:#E24B4A">⚠️ Failed to load</div>';}
 }
@@ -157,103 +99,42 @@ function renderKanban(){
   const kb=document.getElementById('kanban');
   const sortedDates=Object.keys(allData).sort((a,b)=>b.localeCompare(a));
   if(!sortedDates.length){kb.innerHTML='<div class="center-msg">No orders</div>';return;}
-
   kb.innerHTML=sortedDates.map(dt=>{
     const dd=new Date(dt+'T00:00:00');
     const dlabel=dd.toLocaleDateString('en-MY',{weekday:'short',day:'2-digit',month:'short'});
     const orders=allData[dt];
-
     const rows=orders.map(o=>{
-      const isPaid=o.paymentStatus==='Paid';
-      const isN=!!o.notifyStatus;
+      const isPaid=o.paymentStatus==='Paid',isN=!!o.notifyStatus;
       const payH=isPaid?'<span class="badge paid">Paid</span>':'<span class="badge bal">RM'+(parseFloat(o.balance)||0).toFixed(0)+'</span>';
-      const nCls=isN?'done':'ny';
-      const nTxt=isN?'✅ Notified':'⚠️ Not yet';
-      const ph=o.phone?'📞 <a href="tel:'+o.phone+'">'+o.phone+'</a>':'';
-
+      const nCls=isN?'done':'ny',nTxt=isN?'✅ Notified':'⚠️ Not yet';
+      const ph=o.phone?' · 📞 <a href="tel:'+o.phone+'">'+o.phone+'</a>':'';
+      const srcTag=o.source?' · <span class="src-tag">'+o.source+'</span>':'';
       return `<div class="o-row ${isN?'notified':'not-notified'}" id="row-${o.rowIndex}">
-        <div class="r-top">
-          <div class="r-name">${o.clientName}</div>
-          <div class="r-time">${o.scanTime}</div>
-        </div>
-        <div class="r-meta">
-          #${o.orderId} · 📐 ${o.size}${o.salesperson?' · 👤 '+o.salesperson:''}${ph?' · '+ph:''}
-        </div>
-        <div class="r-bot">
-          ${payH}
-          <div style="display:flex;gap:4px;align-items:center">
-            <button class="n-btn ${nCls}" id="nb-${o.rowIndex}" onclick="toggleN(${o.rowIndex},${isN?'false':'true'})">${nTxt}</button>
-            <button class="del-btn" onclick="delOrder(${o.rowIndex},'${dt}')" title="Delete">✕</button>
-          </div>
-        </div>
+        <div class="r-top"><div class="r-name">${o.clientName}</div><div class="r-time">${o.scanTime}</div></div>
+        <div class="r-meta">#${o.orderId} · 📐 ${o.size} · 👤 ${o.salesperson||'-'}${srcTag}${ph}</div>
+        <div class="r-bot">${payH}<div style="display:flex;gap:4px;align-items:center"><button class="n-btn ${nCls}" id="nb-${o.rowIndex}" onclick="toggleN(${o.rowIndex},${isN?'false':'true'})">${nTxt}</button><button class="del-btn" onclick="delOrder(${o.rowIndex},'${dt}')">✕</button></div></div>
       </div>`;
     }).join('');
-
-    return `<div class="date-col">
-      <div class="col-header">
-        <span>📅 ${dlabel}</span>
-        <span class="count">${orders.length}</span>
-      </div>
-      <div class="col-body" id="col-${dt}">${rows||'<div class="empty-col">No orders</div>'}</div>
-    </div>`;
+    return `<div class="date-col"><div class="col-header"><span>📅 ${dlabel}</span><span class="count">${orders.length}</span></div><div class="col-body" id="col-${dt}">${rows}</div></div>`;
   }).join('');
 }
 
-// ── Toggle notify ──
-async function toggleN(ri,setNotified){
-  const btn=document.getElementById('nb-'+ri);if(!btn)return;
-  btn.disabled=true;btn.textContent='...';
-  const status=setNotified?'Notified':'';
-  try{
-    await fetch(API,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain'},
-      body:JSON.stringify({action:'updateNotify',rowIndex:ri,status:status})});
-    // Update UI
+async function toggleN(ri,set){const b=document.getElementById('nb-'+ri);if(!b)return;b.disabled=true;b.textContent='...';const st=set?'Notified':'';
+  try{await fetch(API,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain'},body:JSON.stringify({action:'updateNotify',rowIndex:ri,status:st})});
     const row=document.getElementById('row-'+ri);
-    if(setNotified){
-      btn.className='n-btn done';btn.textContent='✅ Notified';
-      btn.onclick=function(){toggleN(ri,false);};
-      if(row){row.classList.remove('not-notified');row.classList.add('notified');}
-    }else{
-      btn.className='n-btn ny';btn.textContent='⚠️ Not yet';
-      btn.onclick=function(){toggleN(ri,true);};
-      if(row){row.classList.remove('notified');row.classList.add('not-notified');}
-    }
-    btn.disabled=false;
-    updateStats(setNotified?-1:1);
-    showToast(setNotified?'✅ Notified':'↩️ Unmarked');
-  }catch(e){btn.disabled=false;btn.textContent='⚠️ Error';showToast('⚠️ Failed');}
-}
+    if(set){b.className='n-btn done';b.textContent='✅ Notified';b.onclick=function(){toggleN(ri,false)};if(row){row.classList.remove('not-notified');row.classList.add('notified');}}
+    else{b.className='n-btn ny';b.textContent='⚠️ Not yet';b.onclick=function(){toggleN(ri,true)};if(row){row.classList.remove('notified');row.classList.add('not-notified');}}
+    b.disabled=false;updateStats(set?-1:1);showToast(set?'✅ Notified':'↩️ Unmarked');
+  }catch(e){b.disabled=false;b.textContent='Error';showToast('⚠️ Failed');}}
 
-// ── Delete order ──
-async function delOrder(ri,dt){
-  if(!confirm('Delete this order from history?'))return;
-  const row=document.getElementById('row-'+ri);
-  if(row)row.style.opacity='0.4';
-  try{
-    await fetch(API,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain'},
-      body:JSON.stringify({action:'deleteOrder',rowIndex:ri})});
-    if(row)row.remove();
-    // Remove from local data
-    if(allData[dt]){
-      allData[dt]=allData[dt].filter(o=>o.rowIndex!==ri);
-      if(!allData[dt].length)delete allData[dt];
-    }
-    // Update column count
-    const col=document.getElementById('col-'+dt);
-    if(col&&!col.children.length){
-      const parent=col.closest('.date-col');
-      if(parent)parent.remove();
-    }
+async function delOrder(ri,dt){if(!confirm('Delete this order?'))return;const row=document.getElementById('row-'+ri);if(row)row.style.opacity='.3';
+  try{await fetch(API,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain'},body:JSON.stringify({action:'deleteOrder',rowIndex:ri})});if(row)row.remove();
+    if(allData[dt]){allData[dt]=allData[dt].filter(o=>o.rowIndex!==ri);if(!allData[dt].length)delete allData[dt];}
+    const col=document.getElementById('col-'+dt);if(col&&!col.children.length){const p=col.closest('.date-col');if(p)p.remove();}
     showToast('🗑️ Deleted');
-    // Note: row indices shift after delete — reload for accuracy
-  }catch(e){if(row)row.style.opacity='1';showToast('⚠️ Failed');}
-}
+  }catch(e){if(row)row.style.opacity='1';showToast('⚠️ Failed');}}
 
-function updateStats(pendDelta){
-  const el=document.getElementById('s-pend');
-  if(el)el.textContent=Math.max(0,parseInt(el.textContent)+pendDelta);
-}
-
+function updateStats(d){const el=document.getElementById('s-pend');if(el)el.textContent=Math.max(0,parseInt(el.textContent)+d);}
 function showToast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500);}
 </script>
 </body>
