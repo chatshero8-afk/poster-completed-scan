@@ -122,6 +122,9 @@
 
 <script>
 const API='https://script.google.com/macros/s/AKfycbxPrCnvw-IriQLbgWiuhhuVZlz_KguTni5-Uy4U4dVN8UwjAe5yo5ZKt6JCKfDaPLV3qQ/exec';
+// Photos also go to the AMS (Customer Notices tab) through this app's Apps Script, which holds the AMS key.
+
+let PJ=[];
 let SO=[],PF=[],qr=null,scanning=false,camOn=false,busy=false;
 const inp=document.getElementById('order-input');
 document.addEventListener('DOMContentLoaded',()=>{inp.focus();warmUp();sR(14);});
@@ -175,8 +178,10 @@ function rO(){
 }
 function rmO(id){SO=SO.filter(o=>o.orderId!==id);rO();}
 
-document.getElementById('file-input').addEventListener('change',function(e){Array.from(e.target.files).forEach(f=>{const i=PF.length;PF.push(f);const r=new FileReader();r.onload=ev=>{const d=document.createElement('div');d.className='pitem';d.id='p-'+i;d.innerHTML='<img src="'+ev.target.result+'"><button class="del" onclick="rmP('+i+')">✕</button>';document.getElementById('pgrid').appendChild(d);};r.readAsDataURL(f);});e.target.value='';toast('📸 Added');});
-function rmP(i){PF[i]=null;const el=document.getElementById('p-'+i);if(el)el.remove();}
+document.getElementById('file-input').addEventListener('change',function(e){Array.from(e.target.files).forEach(f=>{const i=PF.length;PF.push(f);shrink(f).then(j=>{PJ[i]=j}).catch(()=>{});const r=new FileReader();r.onload=ev=>{const d=document.createElement('div');d.className='pitem';d.id='p-'+i;d.innerHTML='<img src="'+ev.target.result+'"><button class="del" onclick="rmP('+i+')">✕</button>';document.getElementById('pgrid').appendChild(d);};r.readAsDataURL(f);});e.target.value='';toast('📸 Added');});
+function shrink(f){return new Promise((ok,no)=>{const u=URL.createObjectURL(f),im=new Image();im.onload=()=>{const k=Math.min(1,1600/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);c.getContext('2d').drawImage(im,0,0,c.width,c.height);URL.revokeObjectURL(u);ok(c.toDataURL('image/jpeg',.82));};im.onerror=no;im.src=u;});}
+function upPh(){const imgs=PJ.filter((j,i)=>j&&PF[i]),ids=SO.map(o=>String(o.orderId));if(!imgs.length||!ids.length)return;try{fetch(API,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain'},body:JSON.stringify({action:'photos',orderIds:ids,images:imgs.slice(0,6)})}).catch(()=>{});}catch(e){}}
+function rmP(i){PJ[i]=null;PF[i]=null;const el=document.getElementById('p-'+i);if(el)el.remove();}
 
 // ═══ MESSAGE FORMAT ═══
 function bMsg(){
@@ -226,8 +231,8 @@ function uS(){
   document.getElementById('mprev').textContent=bMsg();
 }
 
-async function doShare(){const m=bMsg();if(!m)return;logS();const vp=PF.filter(f=>f!==null);if(navigator.share){const sd={text:m};if(vp.length&&navigator.canShare&&navigator.canShare({files:vp}))sd.files=vp;try{await navigator.share(sd);toast('✅ Shared!');clr();return;}catch(e){if(e.name==='AbortError')return;}}window.open('https://api.whatsapp.com/send?text='+encodeURIComponent(m),'_blank');toast('Opening WA...');}
-function clr(){SO=[];PF=[];document.getElementById('pgrid').innerHTML='';rO();}
+async function doShare(){const m=bMsg();if(!m)return;logS();upPh();const vp=PF.filter(f=>f!==null);if(navigator.share){const sd={text:m};if(vp.length&&navigator.canShare&&navigator.canShare({files:vp}))sd.files=vp;try{await navigator.share(sd);toast('✅ Shared!');clr();return;}catch(e){if(e.name==='AbortError')return;}}window.open('https://api.whatsapp.com/send?text='+encodeURIComponent(m),'_blank');toast('Opening WA...');}
+function clr(){SO=[];PF=[];PJ=[];document.getElementById('pgrid').innerHTML='';rO();}
 function ordersForLog(){
   const loggedRedoGroups=new Set();
   return SO.filter(o=>{

@@ -29,6 +29,7 @@ function doPost(e) {
     if (body.action === 'logScan') result = logScan(body.orders);
     else if (body.action === 'updateNotify') result = updateNotify(body.rowIndex, body.status);
     else if (body.action === 'deleteOrder') result = deleteOrder(body.rowIndex);
+    else if (body.action === 'photos') result = forwardPhotos(body.orderIds, body.images);
     else result = { error: 'Invalid' };
   } catch (error) {
     result = { error: error.message };
@@ -270,4 +271,22 @@ function getHistory(dateStr) {
     }
   }
   return { orders: results, total: results.length, date: targetDay };
+}
+
+// Photos of a completed order go on to the AMS (Customer Notices tab), which
+// sends one to the customer when staff press Send. The AMS key lives in
+// Project Settings -> Script Properties as AMS_SCAN_KEY, never in this code.
+const AMS_PHOTOS_URL = 'https://ams.6exrf1.easypanel.host/api/scan-photos';
+
+function forwardPhotos(orderIds, images) {
+  const key = PropertiesService.getScriptProperties().getProperty('AMS_SCAN_KEY');
+  if (!key) return { error: 'AMS_SCAN_KEY is not set in Script Properties' };
+  if (!orderIds || !orderIds.length || !images || !images.length) return { error: 'No order or photo' };
+  const res = UrlFetchApp.fetch(AMS_PHOTOS_URL, {
+    method: 'post',
+    contentType: 'text/plain',
+    payload: JSON.stringify({ key: key, orderIds: orderIds.slice(0, 10), images: images.slice(0, 6) }),
+    muteHttpExceptions: true
+  });
+  try { return JSON.parse(res.getContentText()); } catch (e) { return { error: "AMS answered " + res.getResponseCode() }; }
 }
