@@ -29,7 +29,7 @@ function doPost(e) {
     if (body.action === 'logScan') result = logScan(body.orders);
     else if (body.action === 'updateNotify') result = updateNotify(body.rowIndex, body.status);
     else if (body.action === 'deleteOrder') result = deleteOrder(body.rowIndex);
-    else if (body.action === 'photos') result = forwardPhotos(body.orderIds, body.images);
+    else if (body.action === 'photos') result = forwardPhotos(body.orderIds, body.images, body.closeups);
     else result = { error: 'Invalid' };
   } catch (error) {
     result = { error: error.message };
@@ -42,7 +42,7 @@ function fastLookup(orderId) {
   if (!orderId) return { error: 'No orderId' };
   const id = String(orderId).trim();
   const cache = CacheService.getScriptCache();
-  const cacheKey = 'order_v2_' + id;
+  const cacheKey = 'order_v3_' + id; // v3: carries the posting pick
   const cached = cache.get(cacheKey);
   if (cached) return JSON.parse(cached);
 
@@ -100,7 +100,9 @@ function fastLookup(orderId) {
     redoOrderCount: redo.orderCount,
     redoOriginalTotal: redo.originalTotal,
     needsManualReview: redo.needsManualReview,
-    redoReason: redo.reason
+    redoReason: redo.reason,
+    // Picked for posting by the AMS (owner, 17 Nov 2026): then 3 square close-ups are needed.
+    posting: postingPick(id)
   };
   cache.put(cacheKey, JSON.stringify(result), 600);
   return result;
@@ -292,14 +294,33 @@ function getHistory(dateStr) {
 // Project Settings -> Script Properties as AMS_SCAN_KEY, never in this code.
 const AMS_PHOTOS_URL = 'https://ams.6exrf1.easypanel.host/api/scan-photos';
 
-function forwardPhotos(orderIds, images) {
+// Whether the AMS picked this order for posting: { picked, compulsory, why }, or null if it cannot be asked.
+const AMS_PICKS_URL = 'https://ams.6exrf1.easypanel.host/api/scan-photos/picks';
+function postingPick(orderId) {
+  const key = PropertiesService.getScriptProperties().getProperty('AMS_SCAN_KEY');
+  if (!key) return null;
+  try {
+    const res = UrlFetchApp.fetch(AMS_PICKS_URL, {
+      method: 'post',
+      contentType: 'text/plain',
+      payload: JSON.stringify({ key: key, orderIds: [String(orderId)] }),
+      muteHttpExceptions: true
+    });
+    const out = JSON.parse(res.getContentText());
+    return (out && out.picks && out.picks[String(orderId)]) || null;
+  } catch (e) {
+    return null;
+  }
+}
+
+function forwardPhotos(orderIds, images, closeups) {
   const key = PropertiesService.getScriptProperties().getProperty('AMS_SCAN_KEY');
   if (!key) return { error: 'AMS_SCAN_KEY is not set in Script Properties' };
   if (!orderIds || !orderIds.length || !images || !images.length) return { error: 'No order or photo' };
   const res = UrlFetchApp.fetch(AMS_PHOTOS_URL, {
     method: 'post',
     contentType: 'text/plain',
-    payload: JSON.stringify({ key: key, orderIds: orderIds.slice(0, 10), images: images.slice(0, 6) }),
+    payload: JSON.stringify({ key: key, orderIds: orderIds.slice(0, 10), images: images.slice(0, 6), closeups: (closeups || []).slice(0, 6) }),
     muteHttpExceptions: true
   });
   try { return JSON.parse(res.getContentText()); } catch (e) { return { error: "AMS answered " + res.getResponseCode() }; }

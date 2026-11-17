@@ -57,7 +57,12 @@
   .pgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:8px}
   .pitem{position:relative;aspect-ratio:1;border-radius:8px;overflow:hidden}.pitem img{width:100%;height:100%;object-fit:cover}
   .pitem .del{position:absolute;top:2px;right:2px;background:rgba(0,0,0,.6);color:white;border:none;border-radius:50%;width:18px;height:18px;font-size:10px;cursor:pointer;display:flex;align-items:center;justify-content:center}
-  #file-input{display:none}
+  #file-input,#file-input2{display:none}
+  .cu-sec{margin-top:12px;padding:12px;border:2px solid #f5b400;border-radius:12px;background:#fffbea}
+  .cu-hint{margin:4px 0 10px;font-size:13px;line-height:1.5;color:#5c4a00}
+  .cu-zone{border-color:#f5b400}
+  .cu-skip{margin-top:8px;background:none;border:0;color:#8a6d00;font-size:12px;text-decoration:underline;cursor:pointer;padding:4px 0}
+  .post-tag{display:inline-block;margin:3px 0 4px;padding:2px 8px;border-radius:999px;background:#f5b400;color:#3a2a00;font-size:11px;font-weight:800;letter-spacing:.2px}
   .mprev{background:var(--bg);border-radius:8px;padding:10px;margin-top:10px;font-size:11px;white-space:pre-wrap;line-height:1.5;font-family:monospace;display:none}.mprev.show{display:block}
   .empty{text-align:center;padding:24px 16px;color:var(--text2);font-size:12px}.empty-icon{font-size:32px;display:block;margin-bottom:8px;opacity:.4}
   .bottom-bar{position:fixed;bottom:0;left:0;right:0;background:var(--card);border-top:1px solid var(--border);padding:10px 14px 18px;z-index:20}
@@ -104,6 +109,7 @@
   <div id="osec" style="display:none">
     <div class="label">📋 SCANNED (<span id="oc">0</span>)</div><div id="olist"></div>
     <div class="photo-sec show"><div class="label">📷 PHOTOS</div><div class="pzone" onclick="document.getElementById('file-input').click()"><div style="font-size:28px">📸</div><strong>Take photo</strong><p>Camera or gallery</p></div><div class="pgrid" id="pgrid"></div></div>
+    <div class="photo-sec cu-sec" id="csec"><div class="label">⭐ CLOSE-UPS FOR POSTING (<span id="cc">0</span>/3)</div><p class="cu-hint">This art was picked for posting. Take <b>3 close-ups</b>: the details, the texture and the diamonds catching the light. Each photo is cropped to a square.</p><div class="pzone cu-zone" onclick="document.getElementById('file-input2').click()"><div style="font-size:28px">🔍</div><strong>Take close-up</strong><p>Square · close to the art</p></div><div class="pgrid" id="cgrid"></div><button class="cu-skip" id="cu-skip" onclick="skipCU()">Can't take them now? Skip</button></div>
     <div class="label">💬 PREVIEW</div><div class="mprev show" id="mprev"></div>
   </div>
   <div id="emp" class="empty"><span class="empty-icon">📦</span>Scan barcode or enter Order ID</div>
@@ -117,6 +123,7 @@
 </div>
 
 <input type="file" id="file-input" accept="image/*" capture="environment" multiple>
+<input type="file" id="file-input2" accept="image/*" capture="environment" multiple>
 <div class="bottom-bar" id="bbar"><div class="bottom-inner"><button class="share-btn" id="sbtn2" disabled onclick="doShare()">💬 Share to WhatsApp</button><div class="share-hint" id="shint">Scan an order to start</div></div></div>
 <div class="toast" id="toast"></div>
 
@@ -147,7 +154,7 @@ async function doLookup(){
   busy=true;hS();sh('sl');
   try{const r=await fetch(API+'?action=lookup&orderId='+encodeURIComponent(id));const d=await r.json();hS();
     if(d.found){let sz=d.size||'';if(!sz&&d.filename){const m=d.filename.match(/(\d+)\s*[x×]\s*(\d+)\s*(cm)?/i);if(m)sz=m[1]+'cm × '+m[2]+'cm';else sz=d.filename;}
-      SO.push({orderId:d.orderId,clientName:d.clientName,clientContact:d.clientContact||'',size:sz,servedBy:d.servedBy,source:d.source||'',batch:d.batch,isPaid:d.isPaid,balance:Number(d.balance)||0,total:Number(d.total)||0,deposit:Number(d.deposit)||0,isRedo:!!d.isRedo,redoGroupKey:d.redoGroupKey||'',redoOrderCount:Number(d.redoOrderCount)||0,redoOriginalTotal:Number(d.redoOriginalTotal)||0,needsManualReview:!!d.needsManualReview});
+      SO.push({posting:d.posting||null,orderId:d.orderId,clientName:d.clientName,clientContact:d.clientContact||'',size:sz,servedBy:d.servedBy,source:d.source||'',batch:d.batch,isPaid:d.isPaid,balance:Number(d.balance)||0,total:Number(d.total)||0,deposit:Number(d.deposit)||0,isRedo:!!d.isRedo,redoGroupKey:d.redoGroupKey||'',redoOrderCount:Number(d.redoOrderCount)||0,redoOriginalTotal:Number(d.redoOriginalTotal)||0,needsManualReview:!!d.needsManualReview});
       document.getElementById('sn').textContent=d.clientName;document.getElementById('sd').textContent=d.needsManualReview?'Redo needs manual check':(d.isRedo?'Redo group · Balance RM'+(Number(d.balance)||0).toFixed(2):sz+' · #'+d.orderId);sh('ss');toast(d.needsManualReview?'⚠️ Check redo total':'✅ '+d.clientName);setTimeout(()=>hi('ss'),3000);
     }else{document.getElementById('em').textContent='#'+id+' not found';sh('se');setTimeout(()=>hi('se'),3000);}
   }catch(e){hS();document.getElementById('em').textContent='Connection error';sh('se');}
@@ -173,15 +180,27 @@ function rO(){
     else{pt='RM'+Math.round(o.balance);paymentClass='balance';}
     const srcTag=o.source?'<span class="src-tag">'+o.source+'</span>':'';
     const redoMeta=o.isRedo?(o.needsManualReview?'<br>⚠️ Redo: manual total check':'<br>↻ Redo group · '+o.redoOrderCount+' original order'+(o.redoOrderCount===1?'':'s')+' · Original RM'+Math.round(o.redoOriginalTotal)):'';
-    return '<div class="ocard"><span class="onum">'+(i+1)+'</span><div class="info"><div class="name">'+o.clientName+'</div><div class="meta">📐 '+o.size+'<br>👤 '+o.servedBy+' '+srcTag+' · #'+o.orderId+(o.clientContact?'<br>📞 '+o.clientContact:'')+redoMeta+'</div></div><div class="rcol"><span class="payment '+paymentClass+'">'+pt+'</span><button class="rmbtn" onclick="rmO(&quot;'+o.orderId+'&quot;)">✕</button></div></div>';
+    const postTag=o.posting&&o.posting.picked?'<div class="post-tag">⭐ POSTING'+(o.posting.compulsory?' · 4×8ft must':'')+' — take 3 close-ups</div>':'';
+    return '<div class="ocard"><span class="onum">'+(i+1)+'</span><div class="info"><div class="name">'+o.clientName+'</div>'+postTag+'<div class="meta">📐 '+o.size+'<br>👤 '+o.servedBy+' '+srcTag+' · #'+o.orderId+(o.clientContact?'<br>📞 '+o.clientContact:'')+redoMeta+'</div></div><div class="rcol"><span class="payment '+paymentClass+'">'+pt+'</span><button class="rmbtn" onclick="rmO(&quot;'+o.orderId+'&quot;)">✕</button></div></div>';
   }).join('');uS();
 }
 function rmO(id){SO=SO.filter(o=>o.orderId!==id);rO();}
 
-document.getElementById('file-input').addEventListener('change',function(e){Array.from(e.target.files).forEach(f=>{const i=PF.length;PF.push(f);shrink(f).then(j=>{PJ[i]=j}).catch(()=>{});const r=new FileReader();r.onload=ev=>{const d=document.createElement('div');d.className='pitem';d.id='p-'+i;d.innerHTML='<img src="'+ev.target.result+'"><button class="del" onclick="rmP('+i+')">✕</button>';document.getElementById('pgrid').appendChild(d);};r.readAsDataURL(f);});e.target.value='';toast('📸 Added');});
+document.getElementById('file-input').addEventListener('change',function(e){Array.from(e.target.files).forEach(f=>{const i=PF.length;PF.push(f);shrink(f).then(j=>{PJ[i]=j;uS();}).catch(()=>{});const r=new FileReader();r.onload=ev=>{const d=document.createElement('div');d.className='pitem';d.id='p-'+i;d.innerHTML='<img src="'+ev.target.result+'"><button class="del" onclick="rmP('+i+')">✕</button>';document.getElementById('pgrid').appendChild(d);};r.readAsDataURL(f);});e.target.value='';toast('📸 Added');});
 function shrink(f){return new Promise((ok,no)=>{const u=URL.createObjectURL(f),im=new Image();im.onload=()=>{const k=Math.min(1,1600/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);c.getContext('2d').drawImage(im,0,0,c.width,c.height);URL.revokeObjectURL(u);ok(c.toDataURL('image/jpeg',.82));};im.onerror=no;im.src=u;});}
-function upPh(){const imgs=PJ.filter((j,i)=>j&&PF[i]),ids=SO.map(o=>String(o.orderId));if(!imgs.length||!ids.length)return;try{fetch(API,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain'},body:JSON.stringify({action:'photos',orderIds:ids,images:imgs.slice(0,6)})}).catch(()=>{});}catch(e){}}
-function rmP(i){PJ[i]=null;PF[i]=null;const el=document.getElementById('p-'+i);if(el)el.remove();}
+function upPh(){const imgs=PJ.filter((j,i)=>j&&PF[i]),ids=SO.map(o=>String(o.orderId));if(!imgs.length||!ids.length)return;const cu=needCU()?CJ.filter(Boolean).slice(0,6):[];try{fetch(API,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain'},body:JSON.stringify({action:'photos',orderIds:ids,images:imgs.slice(0,6),closeups:cu})}).catch(()=>{});}catch(e){}}
+
+// ═══ CLOSE-UPS FOR POSTING (owner, 17 Nov 2026) ═══
+// The AMS picks some arts for posting. When one is scanned, 3 close-ups are
+// needed; each is cropped to a centre square here, so the post gets square photos.
+let CJ=[],skipped=false;
+const needCU=()=>SO.some(o=>o.posting&&o.posting.picked);
+const cuCount=()=>CJ.filter(Boolean).length;
+function square(f){return new Promise((ok,no)=>{const u=URL.createObjectURL(f),im=new Image();im.onload=()=>{const s=Math.min(im.width,im.height),k=Math.min(1,1600/s),c=document.createElement('canvas');c.width=c.height=Math.round(s*k);c.getContext('2d').drawImage(im,(im.width-s)/2,(im.height-s)/2,s,s,0,0,c.width,c.height);URL.revokeObjectURL(u);ok(c.toDataURL('image/jpeg',.86));};im.onerror=no;im.src=u;});}
+document.getElementById('file-input2').addEventListener('change',function(e){Array.from(e.target.files).forEach(f=>{const i=CJ.length;CJ.push(null);square(f).then(j=>{CJ[i]=j;const d=document.createElement('div');d.className='pitem';d.id='c-'+i;d.innerHTML='<img src="'+j+'"><button class="del" onclick="rmC('+i+')">✕</button>';document.getElementById('cgrid').appendChild(d);uS();}).catch(()=>toast('⚠️ Could not read that photo'));});e.target.value='';});
+function rmC(i){CJ[i]=null;const el=document.getElementById('c-'+i);if(el)el.remove();uS();}
+function skipCU(){if(confirm('Skip the close-ups for this posting art? The post will only have the one photo.')){skipped=true;uS();}}
+function rmP(i){PJ[i]=null;PF[i]=null;const el=document.getElementById('p-'+i);if(el)el.remove();uS();}
 
 // ═══ MESSAGE FORMAT ═══
 function bMsg(){
@@ -226,13 +245,16 @@ function bMsg(){
 
 function uS(){
   const n=SO.length,hasManualReview=SO.some(o=>o.needsManualReview);
-  document.getElementById('sbtn2').disabled=n===0||hasManualReview;
-  document.getElementById('shint').textContent=hasManualReview?'Redo needs manual check before sharing':(n?n+' order'+(n>1?'s':'')+' — share':'Scan an order');
+  const cuNeeded=needCU(),cuShort=cuNeeded&&!skipped&&cuCount()<3,noMain=cuNeeded&&!PJ.some((j,i)=>j&&PF[i]);
+  document.getElementById('csec').classList.toggle('show',cuNeeded);
+  document.getElementById('cc').textContent=cuCount();
+  document.getElementById('sbtn2').disabled=n===0||hasManualReview||cuShort||(cuNeeded&&noMain);
+  document.getElementById('shint').textContent=hasManualReview?'Redo needs manual check before sharing':cuShort?'⭐ Take '+(3-cuCount())+' more close-up'+(3-cuCount()===1?'':'s')+' for posting first':(cuNeeded&&noMain)?'⭐ Take a photo of the whole art too':(n?n+' order'+(n>1?'s':'')+' — share':'Scan an order');
   document.getElementById('mprev').textContent=bMsg();
 }
 
 async function doShare(){const m=bMsg();if(!m)return;logS();upPh();const vp=PF.filter(f=>f!==null);if(navigator.share){const sd={text:m};if(vp.length&&navigator.canShare&&navigator.canShare({files:vp}))sd.files=vp;try{await navigator.share(sd);toast('✅ Shared!');clr();return;}catch(e){if(e.name==='AbortError')return;}}window.open('https://api.whatsapp.com/send?text='+encodeURIComponent(m),'_blank');toast('Opening WA...');}
-function clr(){SO=[];PF=[];PJ=[];document.getElementById('pgrid').innerHTML='';rO();}
+function clr(){SO=[];PF=[];PJ=[];CJ=[];skipped=false;document.getElementById('pgrid').innerHTML='';document.getElementById('cgrid').innerHTML='';rO();}
 function ordersForLog(){
   const loggedRedoGroups=new Set();
   return SO.filter(o=>{
