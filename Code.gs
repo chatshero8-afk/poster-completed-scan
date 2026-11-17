@@ -29,7 +29,7 @@ function doPost(e) {
     if (body.action === 'logScan') result = logScan(body.orders);
     else if (body.action === 'updateNotify') result = updateNotify(body.rowIndex, body.status);
     else if (body.action === 'deleteOrder') result = deleteOrder(body.rowIndex);
-    else if (body.action === 'photos') result = forwardPhotos(body.orderIds, body.images, body.closeups);
+    else if (body.action === 'photos') result = forwardPhotos(body.orderIds, body.images, body.closeups, body.noPost);
     else result = { error: 'Invalid' };
   } catch (error) {
     result = { error: error.message };
@@ -313,14 +313,14 @@ function postingPick(orderId) {
   }
 }
 
-function forwardPhotos(orderIds, images, closeups) {
+function forwardPhotos(orderIds, images, closeups, noPost) {
   const key = PropertiesService.getScriptProperties().getProperty('AMS_SCAN_KEY');
   if (!key) return { error: 'AMS_SCAN_KEY is not set in Script Properties' };
   if (!orderIds || !orderIds.length || !images || !images.length) return { error: 'No order or photo' };
   const res = UrlFetchApp.fetch(AMS_PHOTOS_URL, {
     method: 'post',
     contentType: 'text/plain',
-    payload: JSON.stringify({ key: key, orderIds: orderIds.slice(0, 10), images: images.slice(0, 6), closeups: (closeups || []).slice(0, 6) }),
+    payload: JSON.stringify({ key: key, orderIds: orderIds.slice(0, 10), images: images.slice(0, 6), closeups: (closeups || []).slice(0, 6), noPost: noPost === true }),
     muteHttpExceptions: true
   });
   try { return JSON.parse(res.getContentText()); } catch (e) { return { error: "AMS answered " + res.getResponseCode() }; }

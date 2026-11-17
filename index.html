@@ -61,7 +61,19 @@
   .cu-sec{margin-top:12px;padding:12px;border:2px solid #f5b400;border-radius:12px;background:#fffbea}
   .cu-hint{margin:4px 0 10px;font-size:13px;line-height:1.5;color:#5c4a00}
   .cu-zone{border-color:#f5b400}
-  .cu-skip{margin-top:8px;background:none;border:0;color:#8a6d00;font-size:12px;text-decoration:underline;cursor:pointer;padding:4px 0}
+  .share-btn.cu-wait{background:#f5b400!important;color:#3a2a00!important}
+  .cu-modal{display:none;position:fixed;inset:0;background:rgba(17,19,24,.55);z-index:1000;align-items:flex-end}
+  .cu-modal.open{display:flex}
+  .cu-sheet{width:100%;max-width:520px;margin:0 auto;background:#fff;border-radius:18px 18px 0 0;padding:20px 18px 26px;display:flex;flex-direction:column;gap:14px;box-sizing:border-box;color:#16181d}
+  .cu-head{display:flex;gap:12px;align-items:flex-start}
+  .cu-icon{width:40px;height:40px;border-radius:50%;background:#fef3c7;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:20px}
+  .cu-title{font-weight:800;font-size:17px}
+  .cu-sub{font-size:13px;color:#5b6270;margin-top:2px;line-height:1.45}
+  .cu-list{display:flex;flex-direction:column;gap:8px;background:#f6f7f9;border-radius:12px;padding:12px;font-size:14px}
+  .cu-list div{display:flex;justify-content:space-between;gap:8px}
+  .cu-list b.ok{color:#1e6b34}.cu-list b.bad{color:#8a1c1c}
+  .cu-go{min-height:48px;border:0;border-radius:12px;background:#16181d;color:#fff;font-weight:700;font-size:15px;cursor:pointer}
+  .cu-anyway{min-height:40px;border:0;background:none;color:#8a1c1c;font-weight:600;font-size:13px;cursor:pointer}
   .post-tag{display:inline-block;margin:3px 0 4px;padding:2px 8px;border-radius:999px;background:#f5b400;color:#3a2a00;font-size:11px;font-weight:800;letter-spacing:.2px}
   .mprev{background:var(--bg);border-radius:8px;padding:10px;margin-top:10px;font-size:11px;white-space:pre-wrap;line-height:1.5;font-family:monospace;display:none}.mprev.show{display:block}
   .empty{text-align:center;padding:24px 16px;color:var(--text2);font-size:12px}.empty-icon{font-size:32px;display:block;margin-bottom:8px;opacity:.4}
@@ -109,7 +121,7 @@
   <div id="osec" style="display:none">
     <div class="label">📋 SCANNED (<span id="oc">0</span>)</div><div id="olist"></div>
     <div class="photo-sec show"><div class="label">📷 PHOTOS</div><div class="pzone" onclick="document.getElementById('file-input').click()"><div style="font-size:28px">📸</div><strong>Take photo</strong><p>Camera or gallery</p></div><div class="pgrid" id="pgrid"></div></div>
-    <div class="photo-sec cu-sec" id="csec"><div class="label">⭐ CLOSE-UPS FOR POSTING (<span id="cc">0</span>/3)</div><p class="cu-hint">This art was picked for posting. Take <b>3 close-ups</b>: the details, the texture and the diamonds catching the light. Each photo is cropped to a square.</p><div class="pzone cu-zone" onclick="document.getElementById('file-input2').click()"><div style="font-size:28px">🔍</div><strong>Take close-up</strong><p>Square · close to the art</p></div><div class="pgrid" id="cgrid"></div><button class="cu-skip" id="cu-skip" onclick="skipCU()">Can't take them now? Skip</button></div>
+    <div class="photo-sec cu-sec" id="csec"><div class="label">⭐ CLOSE-UPS FOR POSTING (<span id="cc">0</span>/3)</div><p class="cu-hint">This art was picked for posting. Take <b>3 close-ups</b>: the details, the texture and the diamonds catching the light. Each photo is cropped to a square.</p><div class="pzone cu-zone" onclick="document.getElementById('file-input2').click()"><div style="font-size:28px">🔍</div><strong>Take close-up</strong><p>Square · close to the art</p></div><div class="pgrid" id="cgrid"></div></div>
     <div class="label">💬 PREVIEW</div><div class="mprev show" id="mprev"></div>
   </div>
   <div id="emp" class="empty"><span class="empty-icon">📦</span>Scan barcode or enter Order ID</div>
@@ -126,6 +138,13 @@
 <input type="file" id="file-input2" accept="image/*" capture="environment" multiple>
 <div class="bottom-bar" id="bbar"><div class="bottom-inner"><button class="share-btn" id="sbtn2" disabled onclick="doShare()">💬 Share to WhatsApp</button><div class="share-hint" id="shint">Scan an order to start</div></div></div>
 <div class="toast" id="toast"></div>
+<!-- Photos missing for a posting art (owner approved the sample, 17 Nov 2026) -->
+<div class="cu-modal" id="cu-modal" role="dialog" aria-label="Photos needed for posting"><div class="cu-sheet">
+  <div class="cu-head"><div class="cu-icon">⚠️</div><div><div class="cu-title">Take the photos before sending</div><div class="cu-sub" id="cu-who"></div></div></div>
+  <div class="cu-list"><div><span>Photo of the whole art</span><b id="cu-t1"></b></div><div><span>Square close-ups</span><b id="cu-t2"></b></div></div>
+  <button class="cu-go" onclick="closeCU()">Take the photos now</button>
+  <button class="cu-anyway" onclick="sendAnyway()">Send without them (this art will not be posted)</button>
+</div></div>
 
 <script>
 const API='https://script.google.com/macros/s/AKfycbxx1eGsmXnE0sGOGJj-hOsrhPMm7axT2FwfBCvPzoxDEeXc0CoK_61np8TYiS33dmytWQ/exec';
@@ -188,7 +207,7 @@ function rmO(id){SO=SO.filter(o=>o.orderId!==id);rO();}
 
 document.getElementById('file-input').addEventListener('change',function(e){Array.from(e.target.files).forEach(f=>{const i=PF.length;PF.push(f);shrink(f).then(j=>{PJ[i]=j;uS();}).catch(()=>{});const r=new FileReader();r.onload=ev=>{const d=document.createElement('div');d.className='pitem';d.id='p-'+i;d.innerHTML='<img src="'+ev.target.result+'"><button class="del" onclick="rmP('+i+')">✕</button>';document.getElementById('pgrid').appendChild(d);};r.readAsDataURL(f);});e.target.value='';toast('📸 Added');});
 function shrink(f){return new Promise((ok,no)=>{const u=URL.createObjectURL(f),im=new Image();im.onload=()=>{const k=Math.min(1,1600/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);c.getContext('2d').drawImage(im,0,0,c.width,c.height);URL.revokeObjectURL(u);ok(c.toDataURL('image/jpeg',.82));};im.onerror=no;im.src=u;});}
-function upPh(){const imgs=PJ.filter((j,i)=>j&&PF[i]),ids=SO.map(o=>String(o.orderId));if(!imgs.length||!ids.length)return;const cu=needCU()?CJ.filter(Boolean).slice(0,6):[];try{fetch(API,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain'},body:JSON.stringify({action:'photos',orderIds:ids,images:imgs.slice(0,6),closeups:cu})}).catch(()=>{});}catch(e){}}
+function upPh(){const imgs=PJ.filter((j,i)=>j&&PF[i]),ids=SO.map(o=>String(o.orderId));if(!imgs.length||!ids.length)return;const cu=needCU()?CJ.filter(Boolean).slice(0,6):[],noPost=needCU()&&skipped;try{fetch(API,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain'},body:JSON.stringify({action:'photos',orderIds:ids,images:imgs.slice(0,6),closeups:noPost?[]:cu,noPost:noPost})}).catch(()=>{});}catch(e){}}
 
 // ═══ CLOSE-UPS FOR POSTING (owner, 17 Nov 2026) ═══
 // The AMS picks some arts for posting. When one is scanned, 3 close-ups are
@@ -199,7 +218,11 @@ const cuCount=()=>CJ.filter(Boolean).length;
 function square(f){return new Promise((ok,no)=>{const u=URL.createObjectURL(f),im=new Image();im.onload=()=>{const s=Math.min(im.width,im.height),k=Math.min(1,1600/s),c=document.createElement('canvas');c.width=c.height=Math.round(s*k);c.getContext('2d').drawImage(im,(im.width-s)/2,(im.height-s)/2,s,s,0,0,c.width,c.height);URL.revokeObjectURL(u);ok(c.toDataURL('image/jpeg',.86));};im.onerror=no;im.src=u;});}
 document.getElementById('file-input2').addEventListener('change',function(e){Array.from(e.target.files).forEach(f=>{const i=CJ.length;CJ.push(null);square(f).then(j=>{CJ[i]=j;const d=document.createElement('div');d.className='pitem';d.id='c-'+i;d.innerHTML='<img src="'+j+'"><button class="del" onclick="rmC('+i+')">✕</button>';document.getElementById('cgrid').appendChild(d);uS();}).catch(()=>toast('⚠️ Could not read that photo'));});e.target.value='';});
 function rmC(i){CJ[i]=null;const el=document.getElementById('c-'+i);if(el)el.remove();uS();}
-function skipCU(){if(confirm('Skip the close-ups for this posting art? The post will only have the one photo.')){skipped=true;uS();}}
+const hasMain=()=>PJ.some((j,i)=>j&&PF[i]);
+const cuMissing=()=>needCU()&&!skipped&&(cuCount()<3||!hasMain());
+function openCU(){const p=SO.filter(o=>o.posting&&o.posting.picked);document.getElementById('cu-who').textContent=p.map(o=>'#'+o.orderId+' '+o.clientName).join(', ')+(p.length>1?' are':' is')+' picked for posting. Once it is sent to the group the art is packed - the close-ups cannot be taken later.';const t1=document.getElementById('cu-t1'),t2=document.getElementById('cu-t2');t1.textContent=hasMain()?'✓ Done':'Missing';t1.className=hasMain()?'ok':'bad';t2.textContent=cuCount()+' / 3';t2.className=cuCount()>=3?'ok':'bad';document.getElementById('cu-modal').classList.add('open');}
+function closeCU(){document.getElementById('cu-modal').classList.remove('open');}
+function sendAnyway(){skipped=true;closeCU();uS();doShare();}
 function rmP(i){PJ[i]=null;PF[i]=null;const el=document.getElementById('p-'+i);if(el)el.remove();uS();}
 
 // ═══ MESSAGE FORMAT ═══
@@ -245,15 +268,19 @@ function bMsg(){
 
 function uS(){
   const n=SO.length,hasManualReview=SO.some(o=>o.needsManualReview);
-  const cuNeeded=needCU(),cuShort=cuNeeded&&!skipped&&cuCount()<3,noMain=cuNeeded&&!PJ.some((j,i)=>j&&PF[i]);
+  const cuNeeded=needCU(),missing=cuMissing(),need=[];
+  if(missing&&!hasMain())need.push('the whole art');
+  if(missing&&cuCount()<3)need.push((3-cuCount())+' close-up'+(3-cuCount()===1?'':'s'));
   document.getElementById('csec').classList.toggle('show',cuNeeded);
   document.getElementById('cc').textContent=cuCount();
-  document.getElementById('sbtn2').disabled=n===0||hasManualReview||cuShort||(cuNeeded&&noMain);
-  document.getElementById('shint').textContent=hasManualReview?'Redo needs manual check before sharing':cuShort?'⭐ Take '+(3-cuCount())+' more close-up'+(3-cuCount()===1?'':'s')+' for posting first':(cuNeeded&&noMain)?'⭐ Take a photo of the whole art too':(n?n+' order'+(n>1?'s':'')+' — share':'Scan an order');
+  const b=document.getElementById('sbtn2');
+  b.disabled=n===0||hasManualReview;
+  b.classList.toggle('cu-wait',missing);
+  document.getElementById('shint').textContent=hasManualReview?'Redo needs manual check before sharing':missing?'⭐ Still needed for posting: '+need.join(' and '):(n?n+' order'+(n>1?'s':'')+' — share':'Scan an order');
   document.getElementById('mprev').textContent=bMsg();
 }
 
-async function doShare(){const m=bMsg();if(!m)return;logS();upPh();const vp=PF.filter(f=>f!==null);if(navigator.share){const sd={text:m};if(vp.length&&navigator.canShare&&navigator.canShare({files:vp}))sd.files=vp;try{await navigator.share(sd);toast('✅ Shared!');clr();return;}catch(e){if(e.name==='AbortError')return;}}window.open('https://api.whatsapp.com/send?text='+encodeURIComponent(m),'_blank');toast('Opening WA...');}
+async function doShare(){const m=bMsg();if(!m)return;if(cuMissing()){openCU();return;}logS();upPh();const vp=PF.filter(f=>f!==null);if(navigator.share){const sd={text:m};if(vp.length&&navigator.canShare&&navigator.canShare({files:vp}))sd.files=vp;try{await navigator.share(sd);toast('✅ Shared!');clr();return;}catch(e){if(e.name==='AbortError')return;}}window.open('https://api.whatsapp.com/send?text='+encodeURIComponent(m),'_blank');toast('Opening WA...');}
 function clr(){SO=[];PF=[];PJ=[];CJ=[];skipped=false;document.getElementById('pgrid').innerHTML='';document.getElementById('cgrid').innerHTML='';rO();}
 function ordersForLog(){
   const loggedRedoGroups=new Set();
