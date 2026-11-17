@@ -175,6 +175,8 @@ function parseRM(value) {
 }
 
 // Cols: A:ScanTime B:OrderID C:ClientName D:Phone E:Size F:Salesperson G:Source H:Payment I:Balance J:NotifyStatus K:NotifyTime
+//       L:Status - the Sales Record Status at the scan (owner, 17 Nov 2026), shown in the AMS beside the order
+const LOG_COLS = 12;
 function logScan(orders) {
   if (!orders || !orders.length) return { error: 'No orders' };
 
@@ -182,8 +184,8 @@ function logScan(orders) {
   let logSheet = ss.getSheetByName(LOG_TAB);
   if (!logSheet) {
     logSheet = ss.insertSheet(LOG_TAB);
-    logSheet.appendRow(['Scan Time', 'Order ID', 'Client Name', 'Phone', 'Size', 'Salesperson', 'Source', 'Payment', 'Balance', 'Notify Status', 'Notify Time']);
-    logSheet.getRange(1, 1, 1, 11).setFontWeight('bold').setBackground('#1D9E75').setFontColor('#fff');
+    logSheet.appendRow(['Scan Time', 'Order ID', 'Client Name', 'Phone', 'Size', 'Salesperson', 'Source', 'Payment', 'Balance', 'Notify Status', 'Notify Time', 'Status']);
+    logSheet.getRange(1, 1, 1, LOG_COLS).setFontWeight('bold').setBackground('#1D9E75').setFontColor('#fff');
     logSheet.setFrozenRows(1);
   }
 
@@ -200,11 +202,23 @@ function logScan(orders) {
       order.isPaid ? 'Paid' : (order.isRedo ? 'Redo group balance' : 'Balance'),
       order.isPaid ? 0 : (order.balance || 0),
       '',
-      ''
+      '',
+      liveStatus(order.orderId) || order.status || ''
     ];
   });
-  logSheet.getRange(logSheet.getLastRow() + 1, 1, rows.length, 11).setValues(rows);
+  logSheet.getRange(logSheet.getLastRow() + 1, 1, rows.length, LOG_COLS).setValues(rows);
   return { success: true, logged: rows.length };
+}
+
+// The Status in Sales Record right now (the lookup is cached for 10 minutes, so it may be older).
+function liveStatus(orderId) {
+  const id = String(orderId || '').trim();
+  if (!id) return '';
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SALES_TAB);
+  if (!sheet) return '';
+  const found = sheet.getRange('E:E').createTextFinder(id).matchEntireCell(true).findAll();
+  if (!found || !found.length) return '';
+  return String(sheet.getRange(found[found.length - 1].getRow(), C.STATUS + 1).getValue() || '').trim();
 }
 
 function updateNotify(rowIndex, status) {
